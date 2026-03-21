@@ -1,4 +1,5 @@
 import axiosInstance from './api/axiosConfig';
+import { API_CONFIG } from '../constants/config';
 
 class AuthService {
   async getCurrentUser() {
@@ -21,7 +22,7 @@ class AuthService {
   }
 
   initiateGoogleLogin() {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+    window.location.href = `${API_CONFIG.OAUTH2_URL}/google`;
   }
 }
 

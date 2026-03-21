@@ -92,12 +92,14 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 | `MONGODB_URI` | MongoDB connection string | Yes | mongodb://localhost:27017/harmonix |
 | `MONGODB_DATABASE` | MongoDB database name | Yes | harmonix |
 | `GOOGLE_CLIENT_ID` | Google OAuth 2.0 Client ID | Yes | - |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 Client Secret | Yes | - |
 | `JWT_SECRET_KEY` | Secret key for JWT signing | Yes | - |
 | `JWT_EXPIRATION_MS` | JWT token expiration in milliseconds | No | 3600000 |
 | `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | Yes | - |
 | `CLOUDINARY_API_KEY` | Cloudinary API key | Yes | - |
 | `CLOUDINARY_API_SECRET` | Cloudinary API secret | Yes | - |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated list of allowed origins | No | http://localhost:5173 |
+| `FRONTEND_URL` | Frontend base URL used for OAuth redirect | No | http://localhost:5173 |
 
 ## Security Notes
 
