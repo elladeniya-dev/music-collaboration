@@ -12,6 +12,7 @@ import EditJob from "./pages/EditJob";
 import ServiceMarketplace from './pages/ServiceMarketplace';
 import CreateServiceForm from './pages/CreateServiceForm';
 import Dashboard from './pages/Dashboard';
+import Orders from './pages/Orders';
 import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
 
@@ -38,6 +39,7 @@ function App() {
             {/* Service Marketplace */}
             <Route path="/services" element={<ServiceMarketplace />} />
             <Route path="/services/create" element={<CreateServiceForm />} />
+            <Route path="/orders" element={<Orders />} />
 
             {/* Profile */}
             <Route path="/profile" element={<Profile />} />

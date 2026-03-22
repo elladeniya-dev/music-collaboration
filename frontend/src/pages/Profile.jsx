@@ -19,13 +19,8 @@ import PortfolioItem from '../components/PortfolioItem';
 import ReviewCard from '../components/ReviewCard';
 import ServiceCard from '../components/ServiceCard';
 import { showSuccess, showError } from '../utils';
-import { userService, serviceService, orderService } from '../services';
-
-const MOCK_REVIEWS = [
-  { id: 'r1', name: 'Sarah Chen', rating: 5, comment: 'Absolutely incredible work! The mix was clean, punchy, and exactly what I envisioned. Will definitely hire again for my next project.', date: '2 weeks ago' },
-  { id: 'r2', name: 'Marcus Johnson', rating: 4.5, comment: 'Great communication and fast delivery. The beat had a unique vibe that perfectly matched my lyrics. Highly recommended!', date: '1 month ago' },
-  { id: 'r3', name: 'Aisha Williams', rating: 5, comment: 'Professional, talented, and easy to work with. The final master sounded radio-ready. Best investment I\'ve made in my music career.', date: '2 months ago' },
-];
+import { formatDate } from '../utils';
+import { userService, serviceService, orderService, reviewService } from '../services';
 
 const Profile = () => {
   const { user } = useUser();
@@ -35,6 +30,7 @@ const Profile = () => {
   
   const [profileData, setProfileData] = useState(null);
   const [sellerServices, setSellerServices] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,6 +44,9 @@ const Profile = () => {
         if (pData?.id) {
             const sData = await serviceService.getServicesBySeller(pData.id);
             setSellerServices(sData || []);
+            
+            const rData = await reviewService.getSellerReviews(pData.id);
+            setReviews(rData || []);
         }
       } catch (err) {
         showError('Failed to load profile');
@@ -281,7 +280,13 @@ const Profile = () => {
             </Box>
           </Box>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {MOCK_REVIEWS.map(r => <ReviewCard key={r.id} review={r} />)}
+            {reviews.length > 0 ? (
+               reviews.map(r => (
+                 <ReviewCard key={r.id} review={{ id: r.id, name: r.reviewerName, rating: r.rating, comment: r.comment, date: formatDate(r.createdAt) }} />
+               ))
+            ) : (
+               <Typography variant="body2" sx={{ color: '#5c5c72' }}>No reviews yet.</Typography>
+            )}
           </div>
         </Box>
       )}

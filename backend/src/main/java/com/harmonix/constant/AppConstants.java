@@ -16,6 +16,7 @@ public final class AppConstants {
     public static final String COLLABORATION_REQUESTS_PATH = API_BASE_PATH + "/collaboration-requests";
     public static final String SERVICES_PATH = API_BASE_PATH + "/services";
     public static final String ORDERS_PATH = API_BASE_PATH + "/orders";
+    public static final String REVIEWS_PATH = API_BASE_PATH + "/reviews";
 
     // Cookie Names
     public static final String TOKEN_COOKIE_NAME = "token";

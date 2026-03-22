@@ -15,6 +15,7 @@ import {
   Work as JobsIcon,
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
+  Receipt as OrdersIcon,
   Person as ProfileIcon,
 } from '@mui/icons-material';
 import { useUser } from '../context/UserContext';
@@ -23,6 +24,7 @@ import CreateModal from './CreateModal';
 const navItems = [
   { label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
   { label: 'Marketplace', icon: <MarketplaceIcon />, path: '/services' },
+  { label: 'Orders', icon: <OrdersIcon />, path: '/orders' },
   { label: 'Jobs', icon: <JobsIcon />, path: '/job' },
   { label: 'Collaborate', icon: <CollabIcon />, path: '/requests' },
   { label: 'Messages', icon: <MessageIcon />, path: '/chat' },

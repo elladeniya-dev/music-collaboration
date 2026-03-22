@@ -7,3 +7,4 @@ export { default as userService } from './userService';
 export { default as websocketService } from './websocketService';
 export { default as serviceService } from './serviceService';
 export { default as orderService } from './orderService';
+export { default as reviewService } from './reviewService';
