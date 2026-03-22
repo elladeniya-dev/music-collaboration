@@ -27,4 +27,6 @@ public class ServiceCreateRequest {
 
     private String category;
     private List<String> tags;
+    private String imageUrl;
+    private String audioUrl;
 }

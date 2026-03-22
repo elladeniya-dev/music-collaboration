@@ -18,6 +18,11 @@ export const useWebSocket = (chatId, userId, onMessageReceived, enabled = true) 
   useEffect(() => {
     if (!enabled || !userId) return;
 
+    if (websocketService.isConnected()) {
+      setConnected(true);
+      setError(null);
+    }
+
     // Connect to WebSocket
     websocketService.connect(
       () => {
@@ -35,6 +40,7 @@ export const useWebSocket = (chatId, userId, onMessageReceived, enabled = true) 
       // Clean up on unmount
       if (subscriptionRef.current) {
         websocketService.unsubscribe(subscriptionRef.current);
+        subscriptionRef.current = null;
       }
     };
   }, [enabled, userId]);

@@ -107,6 +107,7 @@ const ChatInterface = () => {
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
+  const persistedObjectUrlsRef = useRef(new Set());
   const getChatId = () => [getUserId(user), partnerId].sort().join('_');
 
   const handleMessageReceived = useCallback((newMessage) => {
@@ -156,8 +157,13 @@ const ChatInterface = () => {
           URL.revokeObjectURL(file.previewUrl);
         }
       });
+
+      persistedObjectUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      persistedObjectUrlsRef.current.clear();
     };
-  }, [draftFiles]);
+  }, []);
 
   const groupedVersions = useMemo(() => {
     const versioned = messages
@@ -258,16 +264,17 @@ const ChatInterface = () => {
           localOnly: true,
         }));
 
+        draftFiles.forEach((draft) => {
+          if (draft.previewUrl) {
+            persistedObjectUrlsRef.current.add(draft.previewUrl);
+          }
+        });
+
         setMessages((prev) => [...prev, ...localAttachmentMessages]);
       }
 
       setMessage('');
-      setDraftFiles((prev) => {
-        prev.forEach((f) => {
-          if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
-        });
-        return [];
-      });
+      setDraftFiles([]);
       scrollToBottom();
     } catch { showError('Failed to send message'); }
   };

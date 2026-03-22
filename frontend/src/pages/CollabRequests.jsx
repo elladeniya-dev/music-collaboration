@@ -12,7 +12,6 @@ import { showSuccess, showError, showConfirmation, getUserId } from '../utils';
 import { UserLevelChip, UserBadges, getMockUserMeta } from '../components/UserBadge';
 import AudioWavePlayer from '../components/AudioWavePlayer';
 import { AppButton, AppInput, AppModal, EmptyState, PageHeader } from '../components/ui';
-import { getDemoAudioUrl } from '../constants';
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -163,7 +162,8 @@ const CollabRequests = () => {
                         compact
                         title={`${req.title} demo`}
                         seed={req.title || `collab-${idx}`}
-                        audioUrl={req.audioUrl || getDemoAudioUrl(req.title || `collab-${idx}`)}
+                        audioUrl={req.audioUrl || req.mediaUrl || ''}
+                        enableDemoFallback={false}
                         accentStart={accent}
                         accentEnd="#6366f1"
                       />

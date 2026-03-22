@@ -9,7 +9,6 @@ import StatusBadge, { getMockStatus } from './StatusBadge';
 import AudioWavePlayer from './AudioWavePlayer';
 import { TagGroup } from './Tag';
 import { useUser } from '../context/UserContext';
-import { getDemoAudioUrl } from '../constants';
 
 const PACKAGES = ['Basic', 'Standard', 'Premium'];
 const PKG_MULTIPLIERS = [1, 1.8, 3];
@@ -19,6 +18,7 @@ const PKG_DELIVERY = [1, 0.8, 0.6];
 const ServiceCard = ({ service, onOrder, onDelete }) => {
   const { user } = useUser();
   const [selectedPkg, setSelectedPkg] = useState(0);
+  const resolvedAudioUrl = service.audioUrl || service.previewUrl || service.mediaUrl || '';
 
   const gradients = [
     'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -90,7 +90,8 @@ const ServiceCard = ({ service, onOrder, onDelete }) => {
             compact
             title={service.title || 'Service Preview'}
             seed={service.title || 'audio'}
-            audioUrl={service.audioUrl || service.previewUrl || getDemoAudioUrl(service.title || 'service')}
+            audioUrl={resolvedAudioUrl}
+            enableDemoFallback={false}
             accentStart="#a855f7"
             accentEnd="#6366f1"
           />

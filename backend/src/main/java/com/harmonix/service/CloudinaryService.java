@@ -30,6 +30,19 @@ public class CloudinaryService {
         }
     }
 
+    public String uploadMedia(MultipartFile file) {
+        try {
+            Map<?, ?> uploadResult = cloudinary.uploader()
+                    .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "auto"));
+            String secureUrl = (String) uploadResult.get("secure_url");
+            log.info("Media uploaded successfully: {}", secureUrl);
+            return secureUrl;
+        } catch (IOException e) {
+            log.error("Error uploading media to Cloudinary", e);
+            throw new RuntimeException("Failed to upload media: " + e.getMessage(), e);
+        }
+    }
+
     public void deleteImage(String publicId) {
         try {
             cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());

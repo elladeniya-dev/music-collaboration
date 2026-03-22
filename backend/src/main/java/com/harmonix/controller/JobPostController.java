@@ -17,6 +17,7 @@ import com.harmonix.util.AuthUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,7 @@ import java.util.List;
 @RequestMapping(AppConstants.JOB_POSTS_PATH)
 @CrossOrigin(origins = "${cors.allowed-origins}", allowCredentials = "true")
 @RequiredArgsConstructor
+@Slf4j
 public class JobPostController {
 
     private final JobPostService jobPostService;
@@ -47,10 +49,7 @@ public class JobPostController {
     ) {
         User user = AuthUtil.requireUser(request, userRepository);
 
-        String imageUrl = null;
-        if (image != null && !image.isEmpty()) {
-            imageUrl = cloudinaryService.uploadImage(image);
-        }
+        String imageUrl = safeUploadImage(image, "create");
 
         JobPostCreateRequest createRequest = new JobPostCreateRequest(
                 title, description, skillsNeeded, collaborationType,
@@ -95,8 +94,9 @@ public class JobPostController {
         }
 
         String imageUrl = existingJob.getImageUrl();
-        if (image != null && !image.isEmpty()) {
-            imageUrl = cloudinaryService.uploadImage(image);
+        String uploadedImageUrl = safeUploadImage(image, "update");
+        if (uploadedImageUrl != null) {
+            imageUrl = uploadedImageUrl;
         }
 
         JobPostUpdateRequest updateRequest = new JobPostUpdateRequest(
@@ -124,5 +124,22 @@ public class JobPostController {
 
         jobPostService.deleteJobPost(id);
         return ResponseEntity.ok(ApiResponse.success("Job post deleted successfully", null));
+    }
+
+    private String safeUploadImage(MultipartFile image, String action) {
+        if (image == null || image.isEmpty()) {
+            return null;
+        }
+
+        try {
+            return cloudinaryService.uploadImage(image);
+        } catch (Exception ex) {
+            log.warn("Job post image upload failed during {} for '{}' ({} bytes): {}",
+                    action,
+                    image.getOriginalFilename(),
+                    image.getSize(),
+                    ex.getMessage());
+            return null;
+        }
     }
 }

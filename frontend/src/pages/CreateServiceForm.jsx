@@ -96,6 +96,7 @@ const CreateServiceForm = () => {
         deliveryTime: parseInt(formData.deliveryTime, 10),
         category: formData.category,
         tags: formData.tags,
+        mediaFiles: formData.mediaFiles,
       });
       showSuccess('Service published! 🎉');
       setStep(0);

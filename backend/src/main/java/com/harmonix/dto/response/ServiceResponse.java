@@ -23,5 +23,7 @@ public class ServiceResponse {
     private int deliveryTime;
     private String category;
     private List<String> tags;
+    private String imageUrl;
+    private String audioUrl;
     private Date createdAt;
 }

@@ -19,8 +19,13 @@ class WebSocketService {
    * Connect to WebSocket server
    */
   connect(onConnected, onError) {
-    if (this.connected) {
-      console.log('WebSocket already connected');
+    if (this.client?.connected || this.connected) {
+      this.connected = true;
+      if (onConnected) onConnected();
+      return;
+    }
+
+    if (this.client?.active) {
       return;
     }
 
@@ -96,11 +101,8 @@ class WebSocketService {
       return null;
     }
 
-    // Check if client is active, not just connected flag
     if (!this.client.connected) {
-      console.warn('WebSocket not fully connected yet. Subscription will be delayed.');
-      // Retry after connection is established
-      setTimeout(() => this.subscribeToChatRoom(chatId, callback), 500);
+      console.warn('WebSocket not connected yet. Skipping subscription attempt.');
       return null;
     }
 

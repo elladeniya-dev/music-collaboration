@@ -21,11 +21,13 @@ const AudioWavePlayer = ({
   title = 'Audio Preview',
   compact = false,
   seed = '',
+  enableDemoFallback = false,
   accentStart = '#a855f7',
   accentEnd = '#6366f1',
 }) => {
   const containerRef = useRef(null);
   const waveSurferRef = useRef(null);
+  const unmountedRef = useRef(false);
 
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -33,19 +35,25 @@ const AudioWavePlayer = ({
   const [error, setError] = useState(null);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [activeAudioUrl, setActiveAudioUrl] = useState('');
 
-  const resolvedAudioUrl = useMemo(() => audioUrl || getDemoAudioUrl(seed || title), [audioUrl, seed, title]);
+  const fallbackAudioUrl = useMemo(() => {
+    if (!enableDemoFallback) {
+      return '';
+    }
+    return getDemoAudioUrl(seed || title);
+  }, [enableDemoFallback, seed, title]);
 
   useEffect(() => {
-    if (!containerRef.current) {
+    setActiveAudioUrl(audioUrl || fallbackAudioUrl || '');
+  }, [audioUrl, fallbackAudioUrl]);
+
+  useEffect(() => {
+    if (!containerRef.current || waveSurferRef.current) {
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-    setIsReady(false);
-    setIsPlaying(false);
-    setCurrentTime(0);
+    unmountedRef.current = false;
 
     const wave = WaveSurfer.create({
       container: containerRef.current,
@@ -59,44 +67,103 @@ const AudioWavePlayer = ({
       waveColor: 'rgba(180, 180, 210, 0.35)',
       progressColor: accentStart,
       cursorColor: accentEnd,
-      url: resolvedAudioUrl,
     });
 
     waveSurferRef.current = wave;
 
     wave.on('ready', () => {
+      if (unmountedRef.current) return;
       setDuration(wave.getDuration() || 0);
       setIsLoading(false);
       setIsReady(true);
     });
 
     wave.on('audioprocess', () => {
+      if (unmountedRef.current) return;
       setCurrentTime(wave.getCurrentTime() || 0);
     });
 
     wave.on('timeupdate', (time) => {
+      if (unmountedRef.current) return;
       setCurrentTime(time || 0);
     });
 
-    wave.on('play', () => setIsPlaying(true));
-    wave.on('pause', () => setIsPlaying(false));
+    wave.on('play', () => {
+      if (unmountedRef.current) return;
+      setIsPlaying(true);
+    });
+
+    wave.on('pause', () => {
+      if (unmountedRef.current) return;
+      setIsPlaying(false);
+    });
+
     wave.on('finish', () => {
+      if (unmountedRef.current) return;
       setIsPlaying(false);
       setCurrentTime(0);
       wave.seekTo(0);
     });
 
-    wave.on('error', () => {
+    wave.on('error', (err) => {
+      if (unmountedRef.current || err?.name === 'AbortError') {
+        return;
+      }
+
+      // If the provided URL fails (for example due to CORS), fall back once.
+      if (audioUrl && activeAudioUrl === audioUrl && fallbackAudioUrl && fallbackAudioUrl !== audioUrl) {
+        setActiveAudioUrl(fallbackAudioUrl);
+        return;
+      }
+
       setError('Audio preview unavailable');
       setIsLoading(false);
       setIsReady(false);
+      setIsPlaying(false);
     });
 
     return () => {
-      wave.destroy();
+      unmountedRef.current = true;
+      try {
+        wave.destroy();
+      } catch {
+        // Ignore destroy-time aborts from in-flight fetches.
+      }
       waveSurferRef.current = null;
     };
-  }, [accentEnd, accentStart, compact, resolvedAudioUrl]);
+  }, [accentEnd, accentStart, compact]);
+
+  useEffect(() => {
+    const wave = waveSurferRef.current;
+    if (!wave) {
+      return;
+    }
+
+    if (!activeAudioUrl) {
+      setIsLoading(false);
+      setIsReady(false);
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setDuration(0);
+      setError('Audio preview unavailable');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setIsReady(false);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+
+    const frame = requestAnimationFrame(() => {
+      if (!unmountedRef.current) {
+        wave.load(activeAudioUrl);
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [activeAudioUrl]);
 
   const handleToggle = (e) => {
     e?.stopPropagation?.();

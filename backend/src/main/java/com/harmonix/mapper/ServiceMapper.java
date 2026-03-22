@@ -24,6 +24,8 @@ public class ServiceMapper {
                 .deliveryTime(request.getDeliveryTime())
                 .category(request.getCategory())
                 .tags(request.getTags())
+            .imageUrl(request.getImageUrl())
+            .audioUrl(request.getAudioUrl())
                 .createdAt(new Date())
                 .build();
     }
@@ -43,6 +45,8 @@ public class ServiceMapper {
                 .deliveryTime(service.getDeliveryTime())
                 .category(service.getCategory())
                 .tags(service.getTags())
+                .imageUrl(service.getImageUrl())
+                .audioUrl(service.getAudioUrl())
                 .createdAt(service.getCreatedAt())
                 .build();
     }

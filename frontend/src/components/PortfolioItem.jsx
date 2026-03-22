@@ -6,7 +6,6 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import ImageIcon from '@mui/icons-material/Image';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import AudioWavePlayer from './AudioWavePlayer';
-import { getDemoAudioUrl } from '../constants';
 
 const TYPE_ICONS = {
   audio: <MusicNoteIcon sx={{ fontSize: 20 }} />,
@@ -86,7 +85,8 @@ const PortfolioItem = ({ item, index = 0 }) => {
               compact
               title={item.title}
               seed={item.title}
-              audioUrl={item.url || item.audioUrl || getDemoAudioUrl(item.title || 'portfolio')}
+              audioUrl={item.url || item.audioUrl || item.mediaUrl || ''}
+              enableDemoFallback={false}
               accentStart={color}
               accentEnd="#6366f1"
             />
