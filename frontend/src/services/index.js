@@ -5,3 +5,4 @@ export { default as collaborationService } from './collaborationService';
 export { default as chatService } from './chatService';
 export { default as userService } from './userService';
 export { default as websocketService } from './websocketService';
+export { default as serviceService } from './serviceService';

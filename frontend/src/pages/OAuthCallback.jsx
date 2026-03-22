@@ -8,26 +8,24 @@ const OAuthCallback = () => {
   const { setUser } = useUser();
 
   useEffect(() => {
-    // After OAuth redirect, fetch the current user
     const fetchUser = async () => {
       try {
         const userData = await authService.getCurrentUser();
         setUser(userData);
-        navigate('/job', { replace: true });
+        navigate('/services', { replace: true });
       } catch (error) {
         console.error('Failed to fetch user after OAuth:', error);
         navigate('/', { replace: true });
       }
     };
-
     fetchUser();
   }, [navigate, setUser]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-screen bg-[#0f0f1a]">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Completing login...</p>
+        <div className="w-12 h-12 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-5"></div>
+        <p className="text-gray-400 text-sm font-medium">Completing login...</p>
       </div>
     </div>
   );

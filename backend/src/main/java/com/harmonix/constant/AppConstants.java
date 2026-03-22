@@ -14,6 +14,7 @@ public final class AppConstants {
     public static final String MESSAGES_PATH = API_BASE_PATH + "/messages";
     public static final String CHAT_HEADS_PATH = API_BASE_PATH + "/chat-heads";
     public static final String COLLABORATION_REQUESTS_PATH = API_BASE_PATH + "/collaboration-requests";
+    public static final String SERVICES_PATH = API_BASE_PATH + "/services";
 
     // Cookie Names
     public static final String TOKEN_COOKIE_NAME = "token";

@@ -8,6 +8,8 @@ import Login from './pages/Login';
 import OAuthCallback from './pages/OAuthCallback';
 import MainLayout from './layout/MainLayout';
 import EditJob from "./pages/EditJob"; // ✅ merged component
+import ServiceMarketplace from './pages/ServiceMarketplace';
+import CreateServiceForm from './pages/CreateServiceForm';
 
 function App() {
   return (
@@ -26,6 +28,10 @@ function App() {
             <Route path="/requests" element={<CollabRequests />} />
             <Route path="/chat" element={<ChatInterface />} />
             <Route path="/chat/:id" element={<ChatInterface />} />
+
+            {/* Service Marketplace (Phase 1) */}
+            <Route path="/services" element={<ServiceMarketplace />} />
+            <Route path="/services/create" element={<CreateServiceForm />} />
           </Route>
         </Routes>
       </BrowserRouter>
