@@ -8,6 +8,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { jobPostService } from '../services';
 import { showSuccess, showError, formatDateToISO } from '../utils';
 import { CollaborationType } from '../constants';
+import { AppButton, AppCard, AppInput, PageHeader } from '../components/ui';
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -43,42 +44,46 @@ const PostJob = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 700, mx: 'auto', mt: 2, mb: 4 }}>
-      <Box sx={{ bgcolor: '#16161f', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', p: { xs: 3, md: 5 } }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+    <Box sx={{ maxWidth: 820, mx: 'auto', mt: 1, mb: 4 }} className="fade-in">
+      <PageHeader
+        title="Post a Job"
+        subtitle="Create a clear, compelling project brief and attract the right collaborators."
+      />
+
+      <AppCard sx={{ borderRadius: '20px', p: { xs: 3, md: 5 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
           <PostAddIcon sx={{ fontSize: 26, color: '#a855f7' }} />
-          <Typography variant="h5" fontWeight={800} sx={{ color: '#e0e0ef', letterSpacing: '-0.5px' }}>Post a Job</Typography>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#e0e0ef', letterSpacing: '-0.5px' }}>Job Details</Typography>
         </Box>
-        <Typography variant="body2" sx={{ color: '#5c5c72', mb: 4, ml: 5.5 }}>Create a collaboration opportunity.</Typography>
 
         <form onSubmit={handleSubmit}>
           <Stack spacing={3}>
-            <TextField name="title" label="Job Title" fullWidth required value={formData.title} onChange={handleChange} sx={inputSx} />
-            <TextField name="description" label="Description" fullWidth multiline rows={4} required value={formData.description} onChange={handleChange} sx={inputSx} />
-            <TextField name="skillsNeeded" label="Skills Needed" fullWidth required value={formData.skillsNeeded} onChange={handleChange} sx={inputSx} />
-            <TextField select label="Collaboration Type" name="collaborationType" value={formData.collaborationType} onChange={handleChange} fullWidth required sx={inputSx}
+            <AppInput name="title" label="Job Title" helperText="Use a concise title that highlights role and genre." fullWidth required value={formData.title} onChange={handleChange} sx={inputSx} />
+            <AppInput name="description" label="Description" helperText="Define expected outcome, timeline, and collaboration style." fullWidth multiline rows={4} required value={formData.description} onChange={handleChange} sx={inputSx} />
+            <AppInput name="skillsNeeded" label="Skills Needed" helperText="Comma-separated skills, tools, or instruments." fullWidth required value={formData.skillsNeeded} onChange={handleChange} sx={inputSx} />
+            <AppInput select label="Collaboration Type" name="collaborationType" value={formData.collaborationType} onChange={handleChange} fullWidth required sx={inputSx}
               SelectProps={{ MenuProps: { PaperProps: { sx: { bgcolor: '#1e1e2a', color: '#e0e0ef', '& .MuiMenuItem-root:hover': { bgcolor: 'rgba(168,85,247,0.1)' } } } } }}>
               <MenuItem value={CollaborationType.REMOTE}>{CollaborationType.REMOTE}</MenuItem>
               <MenuItem value={CollaborationType.IN_PERSON}>{CollaborationType.IN_PERSON}</MenuItem>
               <MenuItem value={CollaborationType.HYBRID}>{CollaborationType.HYBRID}</MenuItem>
-            </TextField>
+            </AppInput>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DesktopDatePicker label="Availability" format="dd/MM/yyyy" value={formData.availability} onChange={handleDateChange}
                 shouldDisableDate={(d) => { const t = new Date(); t.setHours(0,0,0,0); return d < t; }}
                 slotProps={{ textField: { fullWidth: true, required: true, sx: inputSx } }} />
             </LocalizationProvider>
-            <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}
+            <AppButton kind="secondary" component="label" startIcon={<CloudUploadIcon />}
               sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, py: 1.5, borderColor: 'rgba(255,255,255,0.08)', color: '#8b8b9e', '&:hover': { borderColor: 'rgba(168,85,247,0.3)', color: '#a855f7' } }}>
               {formData.image ? formData.image.name : 'Upload Image'}
               <input hidden accept="image/*" type="file" onChange={(e) => setFormData(p => ({ ...p, image: e.target.files[0] }))} />
-            </Button>
-            <Button type="submit" disabled={submitting}
-              sx={{ py: 1.5, borderRadius: '12px', fontWeight: 700, fontSize: '1rem', textTransform: 'none', background: 'linear-gradient(135deg,#a855f7,#6366f1)', color: 'white', '&:hover': { boxShadow: '0 0 25px rgba(168,85,247,0.25)' } }}>
+            </AppButton>
+            <AppButton type="submit" disabled={submitting}
+              sx={{ py: 1.5, borderRadius: '12px', fontWeight: 700, fontSize: '1rem' }}>
               {submitting ? 'Submitting...' : 'Post Job'}
-            </Button>
+            </AppButton>
           </Stack>
         </form>
-      </Box>
+      </AppCard>
     </Box>
   );
 };

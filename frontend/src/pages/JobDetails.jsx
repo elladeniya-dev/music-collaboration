@@ -12,6 +12,7 @@ import { showSuccess } from '../utils';
 import { useUser } from '../context/UserContext';
 import ProposalModal from '../components/ProposalModal';
 import { UserLevelChip, UserBadges, getMockUserMeta } from '../components/UserBadge';
+import { AppButton, AppCard, EmptyState, PageHeader } from '../components/ui';
 
 const STATUS_COLORS = {
   OPEN: { bg: 'rgba(16,185,129,0.08)', color: '#10b981', border: 'rgba(16,185,129,0.15)' },
@@ -40,7 +41,7 @@ const JobDetails = () => {
   }, [id]);
 
   if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress sx={{ color: '#a855f7' }} /></Box>;
-  if (!job) return <Box sx={{ textAlign: 'center', mt: 10 }}><WorkIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.06)', mb: 2 }} /><Typography variant="h6" sx={{ color: '#5c5c72' }}>Job not found.</Typography></Box>;
+  if (!job) return <Box sx={{ maxWidth: 1000, mx: 'auto', mt: 8 }}><EmptyState icon={<WorkIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.08)' }} />} title="Job not found" description="This post may have been removed or is no longer available." /></Box>;
 
   const isOwner = isResourceOwner(user, job.userId);
   const statusCfg = STATUS_COLORS[jobStatus] || STATUS_COLORS.OPEN;
@@ -51,11 +52,16 @@ const JobDetails = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', mt: 2, mb: 4, px: { xs: 2, md: 0 } }}>
+    <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 1, mb: 4, px: { xs: 2, md: 1 } }} className="fade-in">
+      <PageHeader
+        title="Job Overview"
+        subtitle="Review job requirements, applicant quality, and collaboration fit."
+      />
+
       <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
         {/* Main Content */}
         <Box sx={{ flex: 1 }}>
-          <Box sx={{ bgcolor: '#16161f', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+          <AppCard sx={{ borderRadius: '20px', p: 0, overflow: 'hidden' }}>
             {job.imageUrl && <Box component="img" src={job.imageUrl} alt={job.title} sx={{ width: '100%', height: 220, objectFit: 'cover', borderBottom: '1px solid rgba(255,255,255,0.05)' }} />}
 
             <Box sx={{ p: { xs: 3, md: 4 } }}>
@@ -127,33 +133,33 @@ const JobDetails = () => {
                         </Box>
                         <UserBadges badges={badges} />
                         <Typography variant="body2" sx={{ color: '#8b8b9e', mt: 1.5, mb: 2, lineHeight: 1.6 }}>{a.coverLetter}</Typography>
-                        <Button size="small" startIcon={<CheckCircleIcon sx={{ fontSize: 14 }} />} onClick={() => handleAcceptApplicant(a)}
-                          sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 2.5, background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', '&:hover': { boxShadow: '0 0 20px rgba(16,185,129,0.2)' } }}>
+                        <AppButton size="small" startIcon={<CheckCircleIcon sx={{ fontSize: 14 }} />} onClick={() => handleAcceptApplicant(a)}
+                          sx={{ borderRadius: '10px', px: 2.5, background: 'linear-gradient(135deg, #10b981, #059669)', '&:hover': { boxShadow: '0 0 20px rgba(16,185,129,0.2)' } }}>
                           Accept
-                        </Button>
+                        </AppButton>
                       </Box>
                     );
                   })}
                 </Box>
               )}
             </Box>
-          </Box>
+          </AppCard>
         </Box>
 
         {/* Sidebar */}
         {!isOwner && (
           <Box sx={{ width: { xs: '100%', md: 300 }, flexShrink: 0 }}>
-            <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', p: 3, position: 'sticky', top: 80 }}>
+            <AppCard sx={{ borderRadius: '16px', p: 3, position: 'sticky', top: 80 }}>
               <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>Interested in this job?</Typography>
-              <Button fullWidth onClick={() => setProposalOpen(true)}
-                sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, py: 1.5, background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: 'white', mb: 2, '&:hover': { boxShadow: '0 0 25px rgba(245,158,11,0.25)' } }}>
+              <AppButton fullWidth onClick={() => setProposalOpen(true)}
+                sx={{ py: 1.5, background: 'linear-gradient(135deg, #f59e0b, #f97316)', mb: 2, '&:hover': { boxShadow: '0 0 25px rgba(245,158,11,0.25)' } }}>
                 Apply Now
-              </Button>
+              </AppButton>
               <Box sx={{ display: 'flex', justifyContent: 'space-around', pt: 2, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                 <Box sx={{ textAlign: 'center' }}><Typography variant="h6" fontWeight={800} sx={{ color: '#e0e0ef' }}>{applicants.length}</Typography><Typography variant="caption" sx={{ color: '#5c5c72' }}>Applicants</Typography></Box>
                 <Box sx={{ textAlign: 'center' }}><Typography variant="h6" fontWeight={800} sx={{ color: '#10b981' }}>$95</Typography><Typography variant="caption" sx={{ color: '#5c5c72' }}>Avg Bid</Typography></Box>
               </Box>
-            </Box>
+            </AppCard>
           </Box>
         )}
       </Box>

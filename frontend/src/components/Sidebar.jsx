@@ -46,7 +46,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
           width: isCollapsed ? '72px' : '240px',
           transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           height: '100vh',
-          bgcolor: '#0d0d14',
+          bgcolor: 'rgba(13,13,20,0.96)',
+          backdropFilter: 'blur(14px)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -127,7 +128,10 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
                       transition: 'all 0.25s ease',
                       bgcolor: active ? 'rgba(168, 85, 247, 0.1)' : 'transparent',
                       boxShadow: active ? '0 0 20px rgba(168,85,247,0.1), inset 0 0 0 1px rgba(168,85,247,0.15)' : 'none',
-                      '&:hover': { bgcolor: active ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.04)' },
+                      '&:hover': {
+                        bgcolor: active ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.05)',
+                        transform: isCollapsed ? 'none' : 'translateX(2px)',
+                      },
                     }}
                   >
                     <Box sx={{ color: active ? '#a855f7' : '#5c5c72', display: 'flex', alignItems: 'center', '& .MuiSvgIcon-root': { fontSize: 21 } }}>

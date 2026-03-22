@@ -79,10 +79,6 @@ const MainLayout = () => {
 
   const toggleSidebar = () => setIsCollapsed(prev => !prev);
   const isChatPage = location.pathname.startsWith('/chat');
-  const isMarketplace = location.pathname === '/services';
-  const isJobBoard = location.pathname === '/job';
-  const isCollab = location.pathname === '/requests';
-  const isHeroPage = isMarketplace || isJobBoard || isCollab;
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -94,6 +90,8 @@ const MainLayout = () => {
     if (path.startsWith('/chat')) return 'Messages';
     if (path.startsWith('/jobs/')) return 'Job Details';
     if (path.startsWith('/job/')) return 'Edit Job';
+    if (path === '/profile') return 'Profile';
+    if (path === '/profile/edit') return 'Edit Profile';
     if (path === '/orders') return 'Orders';
     return 'Dashboard';
   };
@@ -127,64 +125,63 @@ const MainLayout = () => {
 
       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Top Navbar */}
-        {!isHeroPage && (
-          <Box
-            component="header"
-            sx={{
-              bgcolor: 'rgba(10, 10, 15, 0.8)',
-              backdropFilter: 'blur(20px)',
-              borderBottom: '1px solid rgba(255,255,255,0.05)',
-              px: { xs: 2, md: 4 },
-              py: 1.5,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              position: 'sticky',
-              top: 0,
-              zIndex: 10,
-            }}
-          >
-            <Typography variant="h6" fontWeight={700} sx={{ color: '#e0e0ef', letterSpacing: '-0.3px' }}>
-              {getPageTitle()}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Tooltip title="Search">
-                <IconButton size="small" sx={{ color: '#5c5c72', '&:hover': { color: '#a855f7' } }}>
-                  <SearchIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Notifications">
-                <IconButton 
-                  size="small" 
-                  onClick={handleNotificationClick}
-                  sx={{ color: '#5c5c72', '&:hover': { color: '#a855f7' }, mr: 1 }}
-                >
-                  <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { bgcolor: '#ef4444', color: 'white' } }}>
-                    <Notifications />
-                  </Badge>
-                </IconButton>
-              </Tooltip>
-
-              <Popover
-                open={openNotifications}
-                anchorEl={notificationAnchorEl}
-                onClose={handleNotificationClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                PaperProps={{
-                  sx: {
-                    mt: 1.5,
-                    width: 360,
-                    maxHeight: 480,
-                    bgcolor: '#13131a',
-                    backgroundImage: 'none',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    boxShadow: '0 10px 40px -10px rgba(0,0,0,0.5)',
-                    borderRadius: 3,
-                    overflow: 'hidden'
-                  }
-                }}
+        <Box
+          component="header"
+          sx={{
+            bgcolor: 'rgba(10, 10, 15, 0.82)',
+            backdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
+            px: { xs: 2, md: 4 },
+            py: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+          }}
+        >
+          <Typography variant="h6" fontWeight={700} sx={{ color: '#f0f0fa', letterSpacing: '-0.3px' }}>
+            {getPageTitle()}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Tooltip title="Search">
+              <IconButton size="small" sx={{ color: '#5c5c72', '&:hover': { color: '#a855f7' } }}>
+                <SearchIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Notifications">
+              <IconButton 
+                size="small" 
+                onClick={handleNotificationClick}
+                sx={{ color: '#5c5c72', '&:hover': { color: '#a855f7' }, mr: 1 }}
               >
+                <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { bgcolor: '#ef4444', color: 'white' } }}>
+                  <Notifications />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+
+            <Popover
+              open={openNotifications}
+              anchorEl={notificationAnchorEl}
+              onClose={handleNotificationClose}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              PaperProps={{
+                sx: {
+                  mt: 1.5,
+                  width: 360,
+                  maxHeight: 480,
+                  bgcolor: '#13131a',
+                  backgroundImage: 'none',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: '0 10px 40px -10px rgba(0,0,0,0.5)',
+                  borderRadius: 3,
+                  overflow: 'hidden'
+                }
+              }}
+            >
                 <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#fff' }}>Notifications</Typography>
                   {unreadCount > 0 && (
@@ -243,31 +240,32 @@ const MainLayout = () => {
                     })
                   )}
                 </List>
-              </Popover>
+            </Popover>
 
-              <Avatar
-                src={user?.profileImage || undefined}
-                sx={{
-                  width: 32, height: 32, ml: 1,
-                  background: 'linear-gradient(135deg, #a855f7, #6366f1)',
-                  fontSize: 13, fontWeight: 600,
-                }}
-              >
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </Avatar>
-            </Box>
+            <Avatar
+              src={user?.profileImage || undefined}
+              sx={{
+                width: 32, height: 32, ml: 1,
+                background: 'linear-gradient(135deg, #a855f7, #6366f1)',
+                fontSize: 13, fontWeight: 600,
+              }}
+            >
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </Avatar>
           </Box>
-        )}
+        </Box>
 
         <Box
           component="main"
           sx={{
-            p: isChatPage || isHeroPage ? 0 : { xs: 2, md: 3 },
-            px: isChatPage || isHeroPage ? 0 : { xs: 2, md: 4 },
-            maxWidth: isChatPage || isHeroPage ? '100%' : '1400px',
+            p: isChatPage ? 0 : { xs: 2, md: 3 },
+            px: isChatPage ? 0 : { xs: 2, md: 4 },
+            maxWidth: isChatPage ? '100%' : '1400px',
             width: '100%',
             flexGrow: 1,
-            overflow: 'hidden',
+            overflowX: 'hidden',
+            overflowY: 'visible',
+            mx: 'auto',
           }}
         >
           <Outlet />

@@ -20,7 +20,7 @@ const Login = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen relative overflow-hidden" style={{ background: '#0a0a0f' }}>
+    <div className="flex items-center justify-center min-h-screen relative overflow-hidden fade-in" style={{ background: '#0a0a0f' }}>
       {/* Ambient */}
       <div className="absolute top-[-200px] left-[-200px] w-[550px] h-[550px] rounded-full blur-[130px]" style={{ background: 'rgba(168,85,247,0.12)' }}></div>
       <div className="absolute bottom-[-200px] right-[-200px] w-[500px] h-[500px] rounded-full blur-[130px]" style={{ background: 'rgba(99,102,241,0.08)' }}></div>
@@ -34,18 +34,18 @@ const Login = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight gradient-text">
+          <h1 className="text-4xl font-extrabold tracking-tight gradient-text">
             HarmoniX
           </h1>
-          <p className="mt-2 text-sm" style={{ color: '#5c5c72' }}>
+          <p className="mt-2 text-base" style={{ color: '#8b8b9e' }}>
             Your creative collaboration platform
           </p>
         </div>
 
         {/* Card */}
         <div className="p-8 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 80px rgba(0,0,0,0.4)' }}>
-          <h2 className="text-xl font-bold text-center mb-2" style={{ color: '#e0e0ef' }}>Welcome back</h2>
-          <p className="text-sm text-center mb-8" style={{ color: '#5c5c72' }}>Sign in to access your dashboard</p>
+          <h2 className="text-2xl font-bold text-center mb-2" style={{ color: '#e0e0ef' }}>Welcome back</h2>
+          <p className="text-base text-center mb-8" style={{ color: '#8b8b9e', lineHeight: 1.65 }}>Sign in to access your dashboard</p>
 
           <button
             onClick={() => authService.initiateGoogleLogin()}
@@ -63,9 +63,9 @@ const Login = () => {
             Continue with Google
           </button>
 
-          <p className="mt-6 text-center text-xs" style={{ color: '#4a4a5e' }}>New here? Auto-registered on first login ✨</p>
+          <p className="mt-6 text-center text-sm" style={{ color: '#64647a' }}>New here? Auto-registered on first login ✨</p>
         </div>
-        <p className="text-xs text-center mt-8" style={{ color: '#3a3a4e' }}>By signing in, you agree to our Terms of Service</p>
+        <p className="text-sm text-center mt-8" style={{ color: '#4a4a5e' }}>By signing in, you agree to our Terms of Service</p>
       </div>
     </div>
   );

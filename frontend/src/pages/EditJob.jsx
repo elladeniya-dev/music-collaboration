@@ -6,6 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { jobPostService } from '../services';
 import { showSuccess, showError } from '../utils';
 import { CollaborationType } from '../constants';
+import { AppButton, AppCard, AppInput, PageHeader } from '../components/ui';
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -43,38 +44,42 @@ const EditJob = () => {
   if (!formData) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress sx={{ color: '#a855f7' }} /></Box>;
 
   return (
-    <Box sx={{ maxWidth: 700, mx: 'auto', mt: 2, mb: 4 }}>
-      <Box sx={{ bgcolor: '#16161f', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', p: { xs: 3, md: 5 } }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+    <Box sx={{ maxWidth: 820, mx: 'auto', mt: 1, mb: 4 }} className="fade-in">
+      <PageHeader
+        title="Edit Job"
+        subtitle="Refine your posting and keep applicants aligned with your expectations."
+      />
+
+      <AppCard sx={{ borderRadius: '20px', p: { xs: 3, md: 5 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
           <EditIcon sx={{ fontSize: 26, color: '#a855f7' }} />
-          <Typography variant="h5" fontWeight={800} sx={{ color: '#e0e0ef', letterSpacing: '-0.5px' }}>Update Job</Typography>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#e0e0ef', letterSpacing: '-0.5px' }}>Update Details</Typography>
         </Box>
-        <Typography variant="body2" sx={{ color: '#5c5c72', mb: 4, ml: 5.5 }}>Edit your job posting details.</Typography>
 
         <form onSubmit={handleSubmit}>
           <Stack spacing={3}>
-            <TextField name="title" label="Title" fullWidth required value={formData.title} onChange={handleChange} sx={inputSx} />
-            <TextField name="description" label="Description" multiline rows={4} fullWidth required value={formData.description} onChange={handleChange} sx={inputSx} />
-            <TextField name="skillsNeeded" label="Skills Needed" fullWidth required value={formData.skillsNeeded} onChange={handleChange} sx={inputSx} />
-            <TextField select name="collaborationType" label="Type" value={formData.collaborationType} onChange={handleChange} fullWidth required sx={inputSx}
+            <AppInput name="title" label="Title" fullWidth required value={formData.title} onChange={handleChange} sx={inputSx} />
+            <AppInput name="description" label="Description" multiline rows={4} fullWidth required value={formData.description} onChange={handleChange} sx={inputSx} />
+            <AppInput name="skillsNeeded" label="Skills Needed" fullWidth required value={formData.skillsNeeded} onChange={handleChange} sx={inputSx} />
+            <AppInput select name="collaborationType" label="Type" value={formData.collaborationType} onChange={handleChange} fullWidth required sx={inputSx}
               SelectProps={{ MenuProps: { PaperProps: { sx: { bgcolor: '#1e1e2a', color: '#e0e0ef', '& .MuiMenuItem-root:hover': { bgcolor: 'rgba(168,85,247,0.1)' } } } } }}>
               <MenuItem value={CollaborationType.REMOTE}>{CollaborationType.REMOTE}</MenuItem>
               <MenuItem value={CollaborationType.IN_PERSON}>{CollaborationType.IN_PERSON}</MenuItem>
               <MenuItem value={CollaborationType.HYBRID}>{CollaborationType.HYBRID}</MenuItem>
-            </TextField>
-            <TextField type="date" name="availability" label="Availability" InputLabelProps={{ shrink: true }} value={formData.availability} onChange={handleChange} fullWidth required sx={inputSx} />
-            <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}
+            </AppInput>
+            <AppInput type="date" name="availability" label="Availability" InputLabelProps={{ shrink: true }} value={formData.availability} onChange={handleChange} fullWidth required sx={inputSx} />
+            <AppButton kind="secondary" component="label" startIcon={<CloudUploadIcon />}
               sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, py: 1.5, borderColor: 'rgba(255,255,255,0.08)', color: '#8b8b9e', '&:hover': { borderColor: 'rgba(168,85,247,0.3)', color: '#a855f7' } }}>
               {imageFile ? imageFile.name : 'Upload New Image'}
               <input hidden type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} />
-            </Button>
-            <Button type="submit"
-              sx={{ py: 1.5, borderRadius: '12px', fontWeight: 700, fontSize: '1rem', textTransform: 'none', background: 'linear-gradient(135deg,#a855f7,#6366f1)', color: 'white', '&:hover': { boxShadow: '0 0 25px rgba(168,85,247,0.25)' } }}>
+            </AppButton>
+            <AppButton type="submit"
+              sx={{ py: 1.5, borderRadius: '12px', fontWeight: 700, fontSize: '1rem' }}>
               Update Job
-            </Button>
+            </AppButton>
           </Stack>
         </form>
-      </Box>
+      </AppCard>
     </Box>
   );
 };

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { jobPostService } from '../services';
 import { showSuccess, showError, formatDate, parseSkills, truncateText, getUserId, isResourceOwner } from '../utils';
 import { useUser } from '../context/UserContext';
+import { AppButton, EmptyState, PageHeader } from '../components/ui';
 
 const SkeletonCard = () => (
   <div className="rounded-2xl overflow-hidden" style={{ background: '#16161f', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -38,9 +39,9 @@ const JobBoard = () => {
   };
 
   return (
-    <Box>
+    <Box className="fade-in">
       {/* ═══════════════════ HERO ═══════════════════ */}
-      <Box sx={{ position: 'relative', overflow: 'hidden', pt: { xs: 8, md: 10 }, pb: { xs: 5, md: 8 }, px: { xs: 3, md: 6 } }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden', pt: { xs: 4, md: 6 }, pb: { xs: 4, md: 5 }, px: { xs: 2, md: 3 } }}>
         {/* Amber glow */}
         <Box sx={{ position: 'absolute', top: -120, left: '25%', width: 450, height: 450, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <Box sx={{ position: 'absolute', top: -80, right: '15%', width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -60,29 +61,31 @@ const JobBoard = () => {
           <Typography sx={{ color: '#5c5c72', fontSize: { xs: '0.95rem', md: '1.05rem' }, mb: 4, maxWidth: 550, lineHeight: 1.6 }}>
             Post your project and receive proposals from skilled musicians, producers, and audio engineers ready to bring your vision to life.
           </Typography>
-          <Button onClick={() => navigate('/post')} startIcon={<Add />}
-            sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, px: 3.5, py: 1.25, background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: 'white', '&:hover': { boxShadow: '0 0 30px rgba(245,158,11,0.25)' } }}>
+          <AppButton onClick={() => navigate('/post')} startIcon={<Add />} sx={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', '&:hover': { boxShadow: '0 0 30px rgba(245,158,11,0.25)' } }}>
             Post a Job
-          </Button>
+          </AppButton>
         </Box>
       </Box>
 
       {/* ═══════════════════ JOBS GRID ═══════════════════ */}
-      <Box sx={{ px: { xs: 3, md: 6 }, pb: 8 }}>
-        <Typography variant="h6" fontWeight={700} sx={{ color: '#e0e0ef', mb: 3 }}>
-          Open Positions
-        </Typography>
+      <Box sx={{ px: { xs: 2, md: 3 }, pb: 7 }}>
+        <PageHeader
+          title="Open Positions"
+          subtitle={`${jobs.length} job${jobs.length === 1 ? '' : 's'} currently listed`}
+          actions={<AppButton onClick={() => navigate('/post')}>Post a Job</AppButton>}
+        />
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : jobs.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 10 }}>
-            <JobIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.06)', mb: 2 }} />
-            <Typography variant="h6" sx={{ color: '#5c5c72' }}>No jobs posted yet</Typography>
-            <Typography variant="body2" sx={{ color: '#4a4a5e', mt: 0.5 }}>Post the first opportunity!</Typography>
-          </Box>
+          <EmptyState
+            icon={<JobIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.08)' }} />}
+            title="No jobs posted yet"
+            description="Create the first opportunity and start receiving collaboration proposals."
+            action={<AppButton onClick={() => navigate('/post')}>Post the First Job</AppButton>}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {jobs.map((job) => {

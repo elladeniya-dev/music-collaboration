@@ -5,7 +5,8 @@ import PauseIcon from '@mui/icons-material/Pause';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import ImageIcon from '@mui/icons-material/Image';
 import VideocamIcon from '@mui/icons-material/Videocam';
-import AudioPlayer from './AudioPlayer';
+import AudioWavePlayer from './AudioWavePlayer';
+import { getDemoAudioUrl } from '../constants';
 
 const TYPE_ICONS = {
   audio: <MusicNoteIcon sx={{ fontSize: 20 }} />,
@@ -81,7 +82,14 @@ const PortfolioItem = ({ item, index = 0 }) => {
         {/* Inline player */}
         {showPlayer && item.type === 'audio' && (
           <Box sx={{ mt: 1.5 }}>
-            <AudioPlayer compact seed={item.title} duration={item.duration || 180} accent={color} />
+            <AudioWavePlayer
+              compact
+              title={item.title}
+              seed={item.title}
+              audioUrl={item.url || item.audioUrl || getDemoAudioUrl(item.title || 'portfolio')}
+              accentStart={color}
+              accentEnd="#6366f1"
+            />
           </Box>
         )}
       </Box>

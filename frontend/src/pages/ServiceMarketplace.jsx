@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ServiceCard from '../components/ServiceCard';
-import { Typography, Box, TextField, InputAdornment, Button } from '@mui/material';
+import { Typography, Box, InputAdornment } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import { serviceService, orderService } from '../services';
@@ -14,6 +14,7 @@ import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import BrushIcon from '@mui/icons-material/Brush';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { AppButton, AppInput, EmptyState, PageHeader } from '../components/ui';
 
 const CATEGORIES = [
   { label: 'Music Production', icon: <MusicNoteIcon />, color: '#a855f7' },
@@ -104,15 +105,15 @@ const ServiceMarketplace = () => {
   };
 
   return (
-    <Box>
+    <Box className="fade-in">
       {/* ═══════════════════ HERO ═══════════════════ */}
       <Box
         sx={{
           position: 'relative',
           overflow: 'hidden',
-          pt: { xs: 8, md: 12 },
-          pb: { xs: 6, md: 10 },
-          px: { xs: 3, md: 6 },
+          pt: { xs: 4, md: 6 },
+          pb: { xs: 4, md: 5 },
+          px: { xs: 2, md: 3 },
         }}
       >
         {/* Ambient glow */}
@@ -124,7 +125,7 @@ const ServiceMarketplace = () => {
             variant="h2"
             sx={{
               fontWeight: 900,
-              fontSize: { xs: '2rem', md: '3.2rem' },
+              fontSize: { xs: '1.95rem', md: '2.7rem' },
               lineHeight: 1.15,
               letterSpacing: '-1.5px',
               mb: 2,
@@ -145,7 +146,7 @@ const ServiceMarketplace = () => {
 
           {/* Search Bar */}
           <Box sx={{ maxWidth: 600, mx: 'auto' }}>
-            <TextField
+            <AppInput
               placeholder="Search services, categories, or sellers..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -176,7 +177,7 @@ const ServiceMarketplace = () => {
       </Box>
 
       {/* ═══════════════════ CATEGORIES ═══════════════════ */}
-      <Box sx={{ px: { xs: 3, md: 6 }, pb: 5 }}>
+      <Box sx={{ px: { xs: 2, md: 3 }, pb: 4 }}>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           {CATEGORIES.map((cat) => {
             const isActive = activeCategory === cat.label;
@@ -218,29 +219,14 @@ const ServiceMarketplace = () => {
       </Box>
 
       {/* ═══════════════════ SERVICES GRID ═══════════════════ */}
-      <Box sx={{ px: { xs: 3, md: 6 }, pb: 8 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Box>
-            <Typography variant="h5" fontWeight={800} sx={{ color: '#e0e0ef', letterSpacing: '-0.5px' }}>
-              {activeCategory ? activeCategory : 'All Services'}
-            </Typography>
-          </Box>
-          <Button
-            onClick={() => navigate('/services/create')}
-            sx={{
-              borderRadius: '12px',
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
-              py: 1,
-              background: 'linear-gradient(135deg, #a855f7, #6366f1)',
-              color: 'white',
-              '&:hover': { boxShadow: '0 0 30px rgba(168,85,247,0.3)' },
-            }}
-          >
-            + Create Service
-          </Button>
-        </Box>
+      <Box sx={{ px: { xs: 2, md: 3 }, pb: 6 }}>
+        <PageHeader
+          title={activeCategory ? activeCategory : 'All Services'}
+          subtitle={`${filtered.length} service${filtered.length === 1 ? '' : 's'} available`}
+          actions={
+            <AppButton onClick={() => navigate('/services/create')}>+ Create Service</AppButton>
+          }
+        />
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -261,12 +247,12 @@ const ServiceMarketplace = () => {
 
         {/* Empty state */}
         {!loading && filtered.length === 0 && (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <StorefrontIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.06)', mb: 2 }} />
-            <Typography variant="h6" sx={{ color: '#5c5c72' }}>
-              {search ? `No services match "${search}"` : "No services found. Be the first to create one!"}
-            </Typography>
-          </Box>
+          <EmptyState
+            icon={<StorefrontIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.08)' }} />}
+            title={search ? `No services match "${search}"` : 'No services found'}
+            description="Try a different search or publish the first service in this category."
+            action={<AppButton onClick={() => navigate('/services/create')}>Create Service</AppButton>}
+          />
         )}
       </Box>
     </Box>

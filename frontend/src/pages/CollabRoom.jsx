@@ -8,6 +8,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { UserLevelChip, getMockUserMeta } from '../components/UserBadge';
+import { AppButton } from '../components/ui';
 
 const MOCK_MEMBERS = [
   { id: '1', name: 'You', role: 'Producer', online: true },
@@ -33,7 +34,7 @@ const CollabRoom = () => {
   const [activeSection, setActiveSection] = useState('chat');
 
   return (
-    <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }} className="fade-in">
       {/* Main Area */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Header */}
@@ -62,11 +63,11 @@ const CollabRoom = () => {
         {activeSection === 'chat' && (
           <>
             {/* Messages */}
-            <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 2, scrollBehavior: 'smooth' }}>
               {MOCK_MESSAGES.map(msg => (
                 <Box key={msg.id} sx={{ display: 'flex', justifyContent: msg.isSelf ? 'flex-end' : 'flex-start' }}>
                   <Box sx={{
-                    maxWidth: '70%', px: 3, py: 2, borderRadius: msg.isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                    maxWidth: '72%', px: 3, py: 2.2, borderRadius: msg.isSelf ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                     background: msg.isSelf ? 'linear-gradient(135deg, #ec4899, #06b6d4)' : 'rgba(255,255,255,0.04)',
                     border: msg.isSelf ? 'none' : '1px solid rgba(255,255,255,0.06)',
                     boxShadow: msg.isSelf ? '0 4px 20px rgba(236,72,153,0.15)' : 'none',
@@ -97,10 +98,10 @@ const CollabRoom = () => {
           <Box sx={{ flex: 1, overflowY: 'auto', p: 4 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef' }}>Shared Files</Typography>
-              <Button size="small" startIcon={<AttachFileIcon sx={{ fontSize: 14 }} />}
-                sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, bgcolor: 'rgba(236,72,153,0.1)', color: '#ec4899', border: '1px solid rgba(236,72,153,0.15)', '&:hover': { bgcolor: 'rgba(236,72,153,0.15)' } }}>
+              <AppButton kind="secondary" size="small" startIcon={<AttachFileIcon sx={{ fontSize: 14 }} />}
+                sx={{ bgcolor: 'rgba(236,72,153,0.1)', color: '#ec4899', border: '1px solid rgba(236,72,153,0.15)', '&:hover': { bgcolor: 'rgba(236,72,153,0.15)' } }}>
                 Upload File
-              </Button>
+              </AppButton>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {MOCK_FILES.map((f, i) => (

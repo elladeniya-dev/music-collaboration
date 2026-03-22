@@ -10,6 +10,9 @@ import { useNavigate } from 'react-router-dom';
 import { collaborationService } from '../services';
 import { showSuccess, showError, showConfirmation, getUserId } from '../utils';
 import { UserLevelChip, UserBadges, getMockUserMeta } from '../components/UserBadge';
+import AudioWavePlayer from '../components/AudioWavePlayer';
+import { AppButton, AppInput, AppModal, EmptyState, PageHeader } from '../components/ui';
+import { getDemoAudioUrl } from '../constants';
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -77,7 +80,7 @@ const CollabRequests = () => {
   return (
     <Box>
       {/* HERO */}
-      <Box sx={{ position: 'relative', overflow: 'hidden', pt: { xs: 8, md: 10 }, pb: { xs: 5, md: 8 }, px: { xs: 3, md: 6 } }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden', pt: { xs: 4, md: 6 }, pb: { xs: 4, md: 5 }, px: { xs: 2, md: 3 } }}>
         <Box sx={{ position: 'absolute', top: -120, left: '15%', width: 450, height: 450, borderRadius: '50%', background: 'radial-gradient(circle, rgba(236,72,153,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <Box sx={{ position: 'absolute', top: -100, right: '20%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <Box sx={{ maxWidth: 700, position: 'relative', zIndex: 1 }}>
@@ -90,15 +93,14 @@ const CollabRequests = () => {
           <Typography sx={{ color: '#5c5c72', fontSize: { xs: '0.95rem', md: '1.05rem' }, mb: 4, maxWidth: 550, lineHeight: 1.6 }}>
             Connect with artists, producers, and musicians. Build something amazing together.
           </Typography>
-          <Button onClick={() => setOpen(true)} startIcon={<Add />}
-            sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, px: 3.5, py: 1.25, background: 'linear-gradient(135deg, #ec4899, #06b6d4)', color: 'white', '&:hover': { boxShadow: '0 0 30px rgba(236,72,153,0.2)' } }}>
+          <AppButton onClick={() => setOpen(true)} startIcon={<Add />} sx={{ background: 'linear-gradient(135deg, #ec4899, #06b6d4)', '&:hover': { boxShadow: '0 0 30px rgba(236,72,153,0.2)' } }}>
             Start Collaboration
-          </Button>
+          </AppButton>
         </Box>
       </Box>
 
       {/* SUGGESTED COLLABORATORS */}
-      <Box sx={{ px: { xs: 3, md: 6 }, pb: 5 }}>
+      <Box sx={{ px: { xs: 2, md: 3 }, pb: 4 }}>
         <Typography variant="h6" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>Suggested Collaborators</Typography>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {SUGGESTED_COLLABS.map(s => {
@@ -121,15 +123,21 @@ const CollabRequests = () => {
       </Box>
 
       {/* COLLAB GRID */}
-      <Box sx={{ px: { xs: 3, md: 6 }, pb: 8 }}>
-        <Typography variant="h6" fontWeight={700} sx={{ color: '#e0e0ef', mb: 3 }}>Open Collaborations</Typography>
+      <Box sx={{ px: { xs: 2, md: 3 }, pb: 7 }}>
+        <PageHeader
+          title="Open Collaborations"
+          subtitle={`${requests.length} active collaboration request${requests.length === 1 ? '' : 's'}`}
+          actions={<AppButton onClick={() => setOpen(true)}>New Request</AppButton>}
+        />
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">{[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}</div>
         ) : requests.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 10 }}>
-            <CollabIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.06)', mb: 2 }} />
-            <Typography variant="h6" sx={{ color: '#5c5c72' }}>No collaborations yet</Typography>
-          </Box>
+          <EmptyState
+            icon={<CollabIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.08)' }} />}
+            title="No collaborations yet"
+            description="Create a request and let creators discover your project vibe."
+            action={<AppButton onClick={() => setOpen(true)}>Start Collaboration</AppButton>}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {requests.map((req, idx) => {
@@ -149,6 +157,18 @@ const CollabRequests = () => {
                     </Box>
                     <Typography variant="caption" sx={{ display: 'block', color: '#5c5c72', mb: 1.5 }}>by {req.creatorEmail || req.creatorId}</Typography>
                     <Typography variant="body2" sx={{ color: '#8b8b9e', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', mb: 2 }}>{req.description}</Typography>
+
+                    <Box sx={{ mb: 2 }}>
+                      <AudioWavePlayer
+                        compact
+                        title={`${req.title} demo`}
+                        seed={req.title || `collab-${idx}`}
+                        audioUrl={req.audioUrl || getDemoAudioUrl(req.title || `collab-${idx}`)}
+                        accentStart={accent}
+                        accentEnd="#6366f1"
+                      />
+                    </Box>
+
                     <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1.5, py: 0.5, borderRadius: '8px', bgcolor: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.1)', mb: 2 }}>
                       <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981' }} />
                       <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600, fontSize: '0.65rem' }}>Open to Collaborate</Typography>
@@ -182,12 +202,11 @@ const CollabRequests = () => {
       </Box>
 
       {/* Dialog */}
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm"
-        PaperProps={{ sx: { bgcolor: '#16161f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', color: '#e0e0ef' } }}>
+      <AppModal open={open} onClose={handleClose} fullWidth maxWidth="sm">
         <DialogTitle sx={{ fontWeight: 700, color: '#e0e0ef' }}>{editingId ? 'Update' : 'Start a Collaboration'}</DialogTitle>
         <DialogContent>
-          <TextField label="What are you looking for?" placeholder="e.g. Looking for a vocalist for R&B track" fullWidth value={title} onChange={(e) => setTitle(e.target.value)} sx={{ mt: 2, ...inputSx }} />
-          <TextField label="Describe the vision" placeholder="Genre, vibe, mood, what you bring..." fullWidth multiline minRows={3} value={description} onChange={(e) => setDescription(e.target.value)} sx={{ mt: 2, ...inputSx }} />
+          <AppInput label="What are you looking for?" placeholder="e.g. Looking for a vocalist for R&B track" fullWidth value={title} onChange={(e) => setTitle(e.target.value)} sx={{ mt: 2, ...inputSx }} />
+          <AppInput label="Describe the vision" placeholder="Genre, vibe, mood, what you bring..." fullWidth multiline minRows={3} value={description} onChange={(e) => setDescription(e.target.value)} sx={{ mt: 2, ...inputSx }} />
 
           {/* Roles selector */}
           <Box sx={{ mt: 2 }}>
@@ -208,13 +227,12 @@ const CollabRequests = () => {
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleClose} sx={{ borderRadius: '10px', textTransform: 'none', color: '#5c5c72' }}>Cancel</Button>
-          <Button onClick={handleCreateOrUpdate}
-            sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg,#ec4899,#06b6d4)', color: 'white', '&:hover': { boxShadow: '0 0 20px rgba(236,72,153,0.2)' } }}>
+          <AppButton kind="ghost" onClick={handleClose}>Cancel</AppButton>
+          <AppButton onClick={handleCreateOrUpdate} sx={{ background: 'linear-gradient(135deg,#ec4899,#06b6d4)', '&:hover': { boxShadow: '0 0 20px rgba(236,72,153,0.2)' } }}>
             {editingId ? 'Update' : 'Post'}
-          </Button>
+          </AppButton>
         </DialogActions>
-      </Dialog>
+      </AppModal>
     </Box>
   );
 };

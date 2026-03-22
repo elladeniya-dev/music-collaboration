@@ -14,13 +14,13 @@ import { useUser } from '../context/UserContext';
 import StatusBadge from '../components/StatusBadge';
 import { UserLevelChip, UserBadges, getMockUserMeta } from '../components/UserBadge';
 import { TagGroup } from '../components/Tag';
-import AudioPlayer from '../components/AudioPlayer';
 import PortfolioItem from '../components/PortfolioItem';
 import ReviewCard from '../components/ReviewCard';
 import ServiceCard from '../components/ServiceCard';
 import { showSuccess, showError } from '../utils';
 import { formatDate } from '../utils';
 import { userService, serviceService, orderService, reviewService } from '../services';
+import { EmptyState, PageHeader } from '../components/ui';
 
 const Profile = () => {
   const { user } = useUser();
@@ -96,7 +96,12 @@ const Profile = () => {
   const sections = ['portfolio', 'about', 'services', 'reviews'];
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', px: { xs: 2, md: 0 }, pb: 6 }}>
+    <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 2, md: 1 }, pb: 6 }} className="fade-in">
+      <PageHeader
+        title="Profile Overview"
+        subtitle="Manage your personal brand, portfolio, services, and reviews from one place."
+      />
+
       {/* ═══════════ HERO ═══════════ */}
       <Box sx={{ position: 'relative', mb: 4 }}>
         {/* Banner */}
@@ -202,7 +207,13 @@ const Profile = () => {
             {portfolio.length > 0 ? (
                portfolio.map((item, i) => <PortfolioItem key={item.id} item={item} index={i} />)
             ) : (
-               <Typography variant="body2" sx={{ color: '#5c5c72' }}>No portfolio items uploaded.</Typography>
+               <Box sx={{ gridColumn: '1/-1' }}>
+                 <EmptyState
+                   icon={<MusicNoteIcon sx={{ fontSize: 44, color: 'rgba(255,255,255,0.08)' }} />}
+                   title="No portfolio items yet"
+                   description="Upload your best tracks and samples to build trust with buyers."
+                 />
+               </Box>
             )}
           </div>
         </Box>
@@ -263,7 +274,11 @@ const Profile = () => {
                 ))}
               </div>
           ) : (
-             <Typography variant="body2" sx={{ color: '#5c5c72' }}>No services offered yet.</Typography>
+             <EmptyState
+               icon={<ShoppingCartIcon sx={{ fontSize: 44, color: 'rgba(255,255,255,0.08)' }} />}
+               title="No services offered yet"
+               description="Create your first service to start receiving paid orders."
+             />
           )}
         </Box>
       )}
@@ -285,7 +300,13 @@ const Profile = () => {
                  <ReviewCard key={r.id} review={{ id: r.id, name: r.reviewerName, rating: r.rating, comment: r.comment, date: formatDate(r.createdAt) }} />
                ))
             ) : (
-               <Typography variant="body2" sx={{ color: '#5c5c72' }}>No reviews yet.</Typography>
+               <Box sx={{ gridColumn: '1/-1' }}>
+                 <EmptyState
+                   icon={<StarIcon sx={{ fontSize: 44, color: 'rgba(255,255,255,0.08)' }} />}
+                   title="No reviews yet"
+                   description="Complete orders to start collecting ratings and testimonials."
+                 />
+               </Box>
             )}
           </div>
         </Box>

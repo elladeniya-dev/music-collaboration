@@ -6,6 +6,7 @@ import { orderService, reviewService } from '../services';
 import { showSuccess, showError } from '../utils';
 import { useUser } from '../context/UserContext';
 import { formatDate } from '../utils';
+import { AppButton, AppCard, AppInput, EmptyState, PageHeader } from '../components/ui';
 
 const STATUS_COLORS = {
   PENDING: { bg: 'rgba(236,72,153,0.08)', color: '#ec4899', border: 'rgba(236,72,153,0.15)' },
@@ -55,7 +56,7 @@ const ReviewForm = ({ orderId, onReviewed }) => {
           }}
         />
       </Box>
-      <TextField
+      <AppInput
         fullWidth
         multiline
         rows={3}
@@ -74,19 +75,14 @@ const ReviewForm = ({ orderId, onReviewed }) => {
           },
         }}
       />
-      <Button
+      <AppButton
         disabled={loading}
         onClick={handleSubmit}
         startIcon={<StarIcon sx={{ fontSize: 18 }} />}
-        sx={{
-          borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 3, py: 1,
-          background: 'linear-gradient(135deg, #a855f7, #6366f1)', color: 'white',
-          '&:hover': { boxShadow: '0 0 20px rgba(168,85,247,0.2)' },
-          '&:disabled': { background: 'rgba(255,255,255,0.05)', color: '#5c5c72' }
-        }}
+        sx={{ '&:disabled': { background: 'rgba(255,255,255,0.05)', color: '#5c5c72' } }}
       >
         Submit Review
-      </Button>
+      </AppButton>
     </Box>
   );
 };
@@ -117,27 +113,22 @@ const Orders = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', px: { xs: 2, md: 4 }, py: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-        <Box sx={{ width: 48, height: 48, borderRadius: '14px', background: 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a855f7' }}>
-          <ShoppingCartIcon />
-        </Box>
-        <Box>
-          <Typography variant="h4" fontWeight={800} sx={{ color: '#e0e0ef', letterSpacing: '-0.5px' }}>My Orders</Typography>
-          <Typography variant="caption" sx={{ color: '#5c5c72' }}>Track and manage your service purchases</Typography>
-        </Box>
-      </Box>
+    <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }} className="fade-in">
+      <PageHeader
+        title="My Orders"
+        subtitle="Track and manage your service purchases with clear status visibility."
+      />
 
       {loading ? (
         <Box display="flex" justifyContent="center" py={10}>
           <CircularProgress sx={{ color: '#a855f7' }} />
         </Box>
       ) : orders.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 10, bgcolor: '#16161f', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <ShoppingCartIcon sx={{ fontSize: 48, color: 'rgba(255,255,255,0.05)', mb: 2 }} />
-          <Typography variant="h6" sx={{ color: '#e0e0ef', mb: 1 }}>No orders yet</Typography>
-          <Typography variant="body2" sx={{ color: '#5c5c72' }}>You haven't bought or sold any services.</Typography>
-        </Box>
+        <EmptyState
+          icon={<ShoppingCartIcon sx={{ fontSize: 48, color: 'rgba(255,255,255,0.08)' }} />}
+          title="No orders yet"
+          description="You have not bought or sold any services yet."
+        />
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {orders.map(order => {
@@ -146,7 +137,7 @@ const Orders = () => {
             const canReview = isBuyer && order.status === 'COMPLETED' && !reviewedOrders.has(order.id);
             
             return (
-              <Box key={order.id} sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 3, border: '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s', '&:hover': { borderColor: 'rgba(168,85,247,0.15)' } }}>
+              <AppCard key={order.id} interactive sx={{ borderRadius: '16px', p: 3, '&:hover': { borderColor: 'rgba(168,85,247,0.15)' } }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', mb: 2 }}>
                   <Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
@@ -180,7 +171,7 @@ const Orders = () => {
                     <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 600 }}>You've reviewed this order</Typography>
                   </Box>
                 )}
-              </Box>
+              </AppCard>
             );
           })}
         </Box>

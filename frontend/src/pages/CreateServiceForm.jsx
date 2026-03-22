@@ -17,6 +17,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FileUploadZone from '../components/FileUploadZone';
 import { serviceService } from '../services';
 import { showSuccess, showError } from '../utils';
+import { AppButton, AppCard, AppInput, PageHeader } from '../components/ui';
 
 const CATEGORIES = [
   'Music Production', 'Mixing & Mastering', 'Songwriting', 'Vocals',
@@ -108,7 +109,12 @@ const CreateServiceForm = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 700, mx: 'auto', mt: 2, mb: 4, px: { xs: 2, md: 0 } }}>
+    <Box sx={{ maxWidth: 860, mx: 'auto', mt: 1, mb: 4, px: { xs: 2, md: 0 } }} className="fade-in">
+      <PageHeader
+        title="Create Service"
+        subtitle="Publish a polished offer with clear details, pricing, and delivery expectations."
+      />
+
       {/* ═══ Progress Bar ═══ */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 5, gap: 0 }}>
         {STEPS.map((s, i) => (
@@ -150,14 +156,7 @@ const CreateServiceForm = () => {
       </Box>
 
       {/* ═══ Form Card ═══ */}
-      <Box
-        sx={{
-          bgcolor: '#16161f',
-          borderRadius: '20px',
-          border: '1px solid rgba(255,255,255,0.05)',
-          p: { xs: 3, md: 5 },
-        }}
-      >
+      <AppCard sx={{ borderRadius: '20px', p: { xs: 3, md: 5 } }}>
         {/* Step 1: Basics */}
         {step === 0 && (
           <Box>
@@ -168,12 +167,12 @@ const CreateServiceForm = () => {
               Start with a clear title and pick the right category.
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <TextField name="title" label="Service Title" placeholder="e.g. Professional Mixing & Mastering" fullWidth value={formData.title} onChange={handleChange} sx={inputSx} />
-              <TextField select name="category" label="Category" fullWidth value={formData.category} onChange={handleChange} sx={inputSx}
+              <AppInput name="title" label="Service Title" placeholder="e.g. Professional Mixing & Mastering" fullWidth value={formData.title} onChange={handleChange} sx={inputSx} helperText="Lead with outcome + specialty to improve conversion." />
+              <AppInput select name="category" label="Category" fullWidth value={formData.category} onChange={handleChange} sx={inputSx}
                 SelectProps={{ MenuProps: { PaperProps: { sx: { bgcolor: '#1e1e2a', color: '#e0e0ef', '& .MuiMenuItem-root:hover': { bgcolor: 'rgba(168,85,247,0.1)' } } } } }}
               >
                 {CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-              </TextField>
+              </AppInput>
             </Box>
           </Box>
         )}
@@ -188,9 +187,9 @@ const CreateServiceForm = () => {
               Tell buyers exactly what they'll get.
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <TextField name="description" label="Description" placeholder="Explain your service, what's included, turnaround..." multiline rows={5} fullWidth value={formData.description} onChange={handleChange} sx={inputSx} />
+              <AppInput name="description" label="Description" placeholder="Explain your service, what's included, turnaround..." multiline rows={5} fullWidth value={formData.description} onChange={handleChange} sx={inputSx} helperText="Be specific about deliverables and revision policy." />
               <Box>
-                <TextField name="tagsInput" label="Tags" placeholder="Press Enter to add" fullWidth value={formData.tagsInput} onChange={handleChange} onKeyDown={handleTagKeyDown} sx={inputSx} />
+                <AppInput name="tagsInput" label="Tags" placeholder="Press Enter to add" fullWidth value={formData.tagsInput} onChange={handleChange} onKeyDown={handleTagKeyDown} sx={inputSx} helperText="Add genre, tool, mood, or format keywords." />
                 {formData.tags.length > 0 && (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1.5 }}>
                     {formData.tags.map((tag) => (
@@ -224,7 +223,7 @@ const CreateServiceForm = () => {
               <Box sx={{ bgcolor: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', p: 3, textAlign: 'center' }}>
                 <AttachMoneyIcon sx={{ fontSize: 36, color: '#10b981', mb: 1 }} />
                 <Typography variant="subtitle2" sx={{ color: '#8b8b9e', mb: 2 }}>Starting Price</Typography>
-                <TextField name="price" type="number" placeholder="0.00" fullWidth value={formData.price} onChange={handleChange}
+                <AppInput name="price" type="number" placeholder="0.00" fullWidth value={formData.price} onChange={handleChange}
                   inputProps={{ min: 1, step: 0.01 }}
                   sx={{ ...inputSx, '& .MuiOutlinedInput-root': { ...inputSx['& .MuiOutlinedInput-root'], textAlign: 'center' } }}
                   InputProps={{ startAdornment: <InputAdornment position="start"><Typography sx={{ color: '#10b981', fontWeight: 700 }}>$</Typography></InputAdornment> }}
@@ -234,7 +233,7 @@ const CreateServiceForm = () => {
               <Box sx={{ bgcolor: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', p: 3, textAlign: 'center' }}>
                 <AccessTimeIcon sx={{ fontSize: 36, color: '#6366f1', mb: 1 }} />
                 <Typography variant="subtitle2" sx={{ color: '#8b8b9e', mb: 2 }}>Delivery Time</Typography>
-                <TextField name="deliveryTime" type="number" placeholder="0" fullWidth value={formData.deliveryTime} onChange={handleChange}
+                <AppInput name="deliveryTime" type="number" placeholder="0" fullWidth value={formData.deliveryTime} onChange={handleChange}
                   inputProps={{ min: 1 }}
                   sx={inputSx}
                   InputProps={{ endAdornment: <InputAdornment position="end"><Typography sx={{ color: '#5c5c72' }}>days</Typography></InputAdornment> }}
@@ -265,17 +264,18 @@ const CreateServiceForm = () => {
 
         {/* ═══ Navigation ═══ */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 5, pt: 3, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <Button
+          <AppButton
             onClick={() => setStep(s => s - 1)}
             disabled={step === 0}
             startIcon={<ArrowBackIcon />}
-            sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, color: '#8b8b9e', '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' }, '&.Mui-disabled': { color: '#3a3a4e' } }}
+            kind="ghost"
+            sx={{ fontWeight: 600, '&.Mui-disabled': { color: '#3a3a4e' } }}
           >
             Back
-          </Button>
+          </AppButton>
 
           {step < STEPS.length - 1 ? (
-            <Button
+            <AppButton
               onClick={() => setStep(s => s + 1)}
               disabled={!canProceed()}
               endIcon={<ArrowForwardIcon />}
@@ -288,9 +288,9 @@ const CreateServiceForm = () => {
               }}
             >
               Continue
-            </Button>
+            </AppButton>
           ) : (
-            <Button
+            <AppButton
               onClick={handleSubmit}
               disabled={submitting}
               sx={{
@@ -301,10 +301,10 @@ const CreateServiceForm = () => {
               }}
             >
               {submitting ? 'Publishing...' : '🚀 Publish Service'}
-            </Button>
+            </AppButton>
           )}
         </Box>
-      </Box>
+      </AppCard>
     </Box>
   );
 };

@@ -1,10 +1,9 @@
-import axios from './api/axiosConfig';
+import { getDashboardData } from './api/dashboard.api';
 
 class DashboardService {
   async getDashboardData() {
     try {
-      const response = await axios.get('/dashboard');
-      return response.data.data;
+      return await getDashboardData();
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       throw error;

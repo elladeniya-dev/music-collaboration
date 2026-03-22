@@ -22,10 +22,11 @@ const OAuthCallback = () => {
   }, [navigate, setUser]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0f0f1a]">
+    <div className="flex items-center justify-center min-h-screen bg-[#0f0f1a] fade-in">
       <div className="text-center">
         <div className="w-12 h-12 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-5"></div>
-        <p className="text-gray-400 text-sm font-medium">Completing login...</p>
+        <p className="text-gray-300 text-base font-semibold">Completing login...</p>
+        <p className="text-gray-500 text-sm mt-1">Setting up your workspace</p>
       </div>
     </div>
   );

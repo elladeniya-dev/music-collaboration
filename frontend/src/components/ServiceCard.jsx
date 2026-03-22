@@ -6,9 +6,10 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { UserLevelChip, UserBadges, getMockUserMeta } from './UserBadge';
 import StatusBadge, { getMockStatus } from './StatusBadge';
-import AudioPlayer from './AudioPlayer';
+import AudioWavePlayer from './AudioWavePlayer';
 import { TagGroup } from './Tag';
 import { useUser } from '../context/UserContext';
+import { getDemoAudioUrl } from '../constants';
 
 const PACKAGES = ['Basic', 'Standard', 'Premium'];
 const PKG_MULTIPLIERS = [1, 1.8, 3];
@@ -85,7 +86,14 @@ const ServiceCard = ({ service, onOrder, onDelete }) => {
 
         {/* Audio preview */}
         <Box sx={{ mb: 2 }}>
-          <AudioPlayer compact seed={service.title || 'audio'} duration={service.deliveryTime ? service.deliveryTime * 40 : 180} accent="#a855f7" />
+          <AudioWavePlayer
+            compact
+            title={service.title || 'Service Preview'}
+            seed={service.title || 'audio'}
+            audioUrl={service.audioUrl || service.previewUrl || getDemoAudioUrl(service.title || 'service')}
+            accentStart="#a855f7"
+            accentEnd="#6366f1"
+          />
         </Box>
 
         {/* Package selector */}

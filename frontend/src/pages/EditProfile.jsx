@@ -13,6 +13,7 @@ import FileUploadZone from '../components/FileUploadZone';
 import PortfolioItem from '../components/PortfolioItem';
 import { showSuccess, showError } from '../utils';
 import { userService } from '../services';
+import { AppButton, AppInput, EmptyState, PageHeader } from '../components/ui';
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -120,14 +121,28 @@ const EditProfile = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', px: { xs: 2, md: 0 }, pb: 6 }}>
+    <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 2, md: 0 }, pb: 6 }} className="fade-in">
+      <PageHeader
+        title="Edit Profile"
+        subtitle="Update identity, portfolio, skills, and account settings with a consistent workflow."
+        actions={
+          <>
+            <IconButton onClick={() => navigate('/profile')}
+              sx={{ color: '#5c5c72', '&:hover': { color: '#a855f7' } }}>
+              <ArrowBackIcon />
+            </IconButton>
+            <AppButton startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon sx={{ fontSize: 16 }} />}
+              onClick={handleSave}
+              disabled={saving}
+              sx={{ '&.Mui-disabled': { background: '#3f3f46', color: '#a1a1aa' } }}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </AppButton>
+          </>
+        }
+      />
+
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-        <IconButton onClick={() => navigate('/profile')}
-          sx={{ color: '#5c5c72', '&:hover': { color: '#a855f7' } }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5" fontWeight={800} sx={{ color: '#e0e0ef', flex: 1, letterSpacing: '-0.5px' }}>Edit Profile</Typography>
+      <Box sx={{ display: 'none' }}>
         <Button startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon sx={{ fontSize: 16 }} />}
           onClick={handleSave}
           disabled={saving}
@@ -176,10 +191,10 @@ const EditProfile = () => {
 
           {/* Fields */}
           <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 4, border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <TextField label="Display Name" fullWidth value={profile.name} onChange={(e) => handleProfileChange('name', e.target.value)} sx={inputSx} />
-            <TextField label="Professional Title" fullWidth value={profile.role} onChange={(e) => handleProfileChange('role', e.target.value)} sx={inputSx}
+            <AppInput label="Display Name" fullWidth value={profile.name} onChange={(e) => handleProfileChange('name', e.target.value)} sx={inputSx} />
+            <AppInput label="Professional Title" fullWidth value={profile.role} onChange={(e) => handleProfileChange('role', e.target.value)} sx={inputSx}
               helperText={<Typography variant="caption" sx={{ color: '#4a4a5e' }}>e.g. Music Producer, Mixing Engineer, Vocalist</Typography>} />
-            <TextField label="Bio" fullWidth multiline rows={4} value={profile.bio} onChange={(e) => handleProfileChange('bio', e.target.value)} sx={inputSx}
+            <AppInput label="Bio" fullWidth multiline rows={4} value={profile.bio} onChange={(e) => handleProfileChange('bio', e.target.value)} sx={inputSx}
               helperText={<Typography variant="caption" sx={{ color: '#4a4a5e' }}>{profile.bio?.length || 0}/500 characters</Typography>} />
           </Box>
         </Box>
@@ -201,10 +216,11 @@ const EditProfile = () => {
           <Box>
             <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>Current Portfolio</Typography>
             {portfolioItems.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 8, bgcolor: '#16161f', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <Typography variant="h6" sx={{ color: '#5c5c72', mb: 1 }}>No portfolio items yet</Typography>
-                <Typography variant="caption" sx={{ color: '#4a4a5e' }}>Upload your best work to showcase your talent</Typography>
-              </Box>
+              <EmptyState
+                icon={<CameraAltIcon sx={{ fontSize: 44, color: 'rgba(255,255,255,0.08)' }} />}
+                title="No portfolio items yet"
+                description="Upload your best work to showcase your talent."
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {portfolioItems.map((item, i) => <PortfolioItem key={item.id} item={item} index={i} />)}
@@ -229,7 +245,7 @@ const EditProfile = () => {
                   <Tag key={tag} label={tag} colorIndex={i} onDelete={() => removeTag(section.setter)(tag)} />
                 ))}
               </Box>
-              <TextField fullWidth size="small" placeholder={`Add ${section.label.toLowerCase()}... (press Enter)`}
+              <AppInput fullWidth size="small" placeholder={`Add ${section.label.toLowerCase()}... (press Enter)`}
                 value={section.input} onChange={(e) => section.setInput(e.target.value)}
                 onKeyDown={addTag(section.setter, section.input, section.setInput)}
                 sx={{ ...inputSx, '& .MuiOutlinedInput-root': { ...inputSx['& .MuiOutlinedInput-root'], '&.Mui-focused': { borderColor: `${section.accent}60`, boxShadow: `0 0 20px ${section.accent}15` } } }} />

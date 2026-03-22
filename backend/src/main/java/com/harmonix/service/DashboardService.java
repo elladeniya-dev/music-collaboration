@@ -15,6 +15,7 @@ import com.harmonix.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,11 +37,11 @@ public class DashboardService {
         int totalOrders = allSellerOrders.size();
         
         long activeOrders = allSellerOrders.stream()
-                .filter(order -> order.getStatus() == OrderStatus.IN_PROGRESS || order.getStatus() == OrderStatus.PENDING)
+                .filter(order -> Arrays.asList(OrderStatus.PENDING, OrderStatus.IN_PROGRESS).contains(order.getStatus()))
                 .count();
 
         List<Order> completedOrdersList = allSellerOrders.stream()
-                .filter(order -> order.getStatus() == OrderStatus.COMPLETED || order.getStatus() == OrderStatus.DELIVERED)
+                .filter(order -> order.getStatus() == OrderStatus.COMPLETED)
                 .collect(Collectors.toList());
                 
         int completedOrdersCount = completedOrdersList.size();
@@ -55,14 +56,16 @@ public class DashboardService {
         int totalReviews = seller != null ? seller.getTotalReviews() : 0;
         
         List<OrderResponse> recentOrders = allSellerOrders.stream()
-                .sorted(Comparator.comparing(Order::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(Order::getCreatedAt,
+                        Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .limit(5)
                 .map(orderMapper::toResponse)
                 .collect(Collectors.toList());
                 
         List<Review> allReviews = reviewRepository.findBySellerId(sellerId);
         List<ReviewResponse> recentReviews = allReviews.stream()
-                .sorted(Comparator.comparing(Review::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(Review::getCreatedAt,
+                        Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .limit(5)
                 .map(reviewMapper::toResponse)
                 .collect(Collectors.toList());
