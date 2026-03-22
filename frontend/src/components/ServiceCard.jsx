@@ -3,17 +3,20 @@ import { Box, Typography, Chip, Rating, Button } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PersonIcon from '@mui/icons-material/Person';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { UserLevelChip, UserBadges, getMockUserMeta } from './UserBadge';
 import StatusBadge, { getMockStatus } from './StatusBadge';
 import AudioPlayer from './AudioPlayer';
 import { TagGroup } from './Tag';
+import { useUser } from '../context/UserContext';
 
 const PACKAGES = ['Basic', 'Standard', 'Premium'];
 const PKG_MULTIPLIERS = [1, 1.8, 3];
 const PKG_COLORS = ['#5c5c72', '#a855f7', '#f59e0b'];
 const PKG_DELIVERY = [1, 0.8, 0.6];
 
-const ServiceCard = ({ service, onOrder }) => {
+const ServiceCard = ({ service, onOrder, onDelete }) => {
+  const { user } = useUser();
   const [selectedPkg, setSelectedPkg] = useState(0);
 
   const gradients = [
@@ -33,6 +36,7 @@ const ServiceCard = ({ service, onOrder }) => {
   const pkgDelivery = Math.max(1, Math.round(baseDelivery * PKG_DELIVERY[selectedPkg]));
   const { level, badges } = getMockUserMeta(service.sellerName);
   const sellerStatus = getMockStatus(service.sellerName);
+  const isOwner = user?.id === service.sellerId;
 
   return (
     <Box sx={{
@@ -108,16 +112,29 @@ const ServiceCard = ({ service, onOrder }) => {
           </Box>
         </Box>
 
-        {/* Order button */}
-        <Button fullWidth startIcon={<ShoppingCartIcon sx={{ fontSize: 16 }} />}
-          onClick={(e) => { e.stopPropagation(); onOrder?.(service, PACKAGES[selectedPkg], pkgPrice); }}
-          sx={{
-            borderRadius: '10px', textTransform: 'none', fontWeight: 700, py: 1,
-            background: 'linear-gradient(135deg, #a855f7, #6366f1)', color: 'white', fontSize: '0.8rem',
-            '&:hover': { boxShadow: '0 0 25px rgba(168,85,247,0.25)' },
-          }}>
-          Order Now
-        </Button>
+        {/* Actions */}
+        {isOwner ? (
+          <Button fullWidth startIcon={<DeleteIcon sx={{ fontSize: 16 }} />}
+            onClick={(e) => { e.stopPropagation(); onDelete?.(service.id); }}
+            sx={{
+              borderRadius: '10px', textTransform: 'none', fontWeight: 700, py: 1,
+              background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '0.8rem',
+              border: '1px solid rgba(239,68,68,0.2)',
+              '&:hover': { bgcolor: 'rgba(239,68,68,0.2)', borderColor: 'rgba(239,68,68,0.4)' },
+            }}>
+            Delete Service
+          </Button>
+        ) : (
+          <Button fullWidth startIcon={<ShoppingCartIcon sx={{ fontSize: 16 }} />}
+            onClick={(e) => { e.stopPropagation(); onOrder?.(service, PACKAGES[selectedPkg], pkgPrice); }}
+            sx={{
+              borderRadius: '10px', textTransform: 'none', fontWeight: 700, py: 1,
+              background: 'linear-gradient(135deg, #a855f7, #6366f1)', color: 'white', fontSize: '0.8rem',
+              '&:hover': { boxShadow: '0 0 25px rgba(168,85,247,0.25)' },
+            }}>
+            Order Now
+          </Button>
+        )}
       </Box>
     </Box>
   );

@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { Box, Typography, Avatar, Button, TextField, IconButton } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Avatar, Button, TextField, IconButton, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import SaveIcon from '@mui/icons-material/Save';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { TagGroup } from '../components/Tag';
 import Tag from '../components/Tag';
 import FileUploadZone from '../components/FileUploadZone';
 import PortfolioItem from '../components/PortfolioItem';
-import { showSuccess } from '../utils';
+import { showSuccess, showError } from '../utils';
+import { userService } from '../services';
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -29,25 +29,75 @@ const inputSx = {
 const TABS = ['Profile Info', 'Portfolio', 'Skills & Tools', 'Account'];
 
 const EditProfile = () => {
-  const { user } = useUser();
+  const { user, login } = useUser();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
   const [profile, setProfile] = useState({
-    name: user?.name || 'Artist',
-    role: 'Music Producer & Audio Engineer',
-    bio: 'Passionate music producer with 8+ years of experience in crafting beats and mixing tracks across multiple genres.',
+    name: user?.name || '',
+    role: '',
+    bio: '',
   });
-  const [skills, setSkills] = useState(['Music Production', 'Mixing', 'Mastering', 'Beat Making', 'Sound Design']);
-  const [tools, setTools] = useState(['FL Studio', 'Ableton Live', 'Logic Pro X', 'Pro Tools']);
-  const [genres, setGenres] = useState(['Lo-fi', 'Hip-Hop', 'R&B', 'Trap', 'EDM']);
+  const [skills, setSkills] = useState([]);
+  const [tools, setTools] = useState([]);
+  const [genres, setGenres] = useState([]);
+  
   const [skillInput, setSkillInput] = useState('');
   const [toolInput, setToolInput] = useState('');
   const [genreInput, setGenreInput] = useState('');
+  
   const [portfolioFiles, setPortfolioFiles] = useState([]);
-  const [portfolioItems] = useState([
-    { id: 'p1', title: 'Summer Vibes Beat', type: 'audio', duration: 195, description: 'Lo-fi hip-hop' },
-    { id: 'p2', title: 'Midnight R&B Session', type: 'audio', duration: 240, description: 'Smooth R&B' },
-  ]);
+  const [portfolioItems, setPortfolioItems] = useState([]);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const data = await userService.getCurrentUser();
+      setProfile({
+        name: data.name || '',
+        role: data.role || '',
+        bio: data.bio || '',
+      });
+      setSkills(data.skills || []);
+      setTools(data.tools || []);
+      setGenres(data.genres || []);
+      setPortfolioItems(data.portfolio || []);
+      setLoading(false);
+    } catch (error) {
+      showError('Failed to load profile');
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updatedUser = await userService.updateProfile({
+        name: profile.name,
+        role: profile.role,
+        bio: profile.bio,
+        skills,
+        tools,
+        genres
+      });
+      
+      // Update global context so header avatar updates
+      if (user) {
+         login({ ...user, name: updatedUser.name }); 
+      }
+      
+      showSuccess('Profile updated successfully!');
+    } catch (error) {
+      showError('Failed to save profile');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleProfileChange = (field, value) => setProfile(p => ({ ...p, [field]: value }));
 
@@ -61,6 +111,14 @@ const EditProfile = () => {
 
   const removeTag = (setter) => (tag) => setter(prev => prev.filter(t => t !== tag));
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
+        <CircularProgress sx={{ color: '#a855f7' }} />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', px: { xs: 2, md: 0 }, pb: 6 }}>
       {/* Header */}
@@ -70,12 +128,14 @@ const EditProfile = () => {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h5" fontWeight={800} sx={{ color: '#e0e0ef', flex: 1, letterSpacing: '-0.5px' }}>Edit Profile</Typography>
-        <Button startIcon={<SaveIcon sx={{ fontSize: 16 }} />}
-          onClick={() => showSuccess('Profile saved!')}
+        <Button startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon sx={{ fontSize: 16 }} />}
+          onClick={handleSave}
+          disabled={saving}
           sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700, px: 3, py: 1,
             background: 'linear-gradient(135deg, #a855f7, #6366f1)', color: 'white',
-            '&:hover': { boxShadow: '0 0 25px rgba(168,85,247,0.25)' } }}>
-          Save Changes
+            '&:hover': { boxShadow: '0 0 25px rgba(168,85,247,0.25)' },
+            '&.Mui-disabled': { background: '#3f3f46', color: '#a1a1aa' } }}>
+          {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </Box>
 
@@ -100,7 +160,7 @@ const EditProfile = () => {
             <Box sx={{ position: 'relative' }}>
               <Avatar src={user?.profileImage}
                 sx={{ width: 80, height: 80, background: 'linear-gradient(135deg, #a855f7, #6366f1)', fontSize: 28, fontWeight: 800 }}>
-                {profile.name[0]}
+                {profile.name?.[0] || 'U'}
               </Avatar>
               <IconButton size="small"
                 sx={{ position: 'absolute', bottom: -4, right: -4, width: 28, height: 28,
@@ -120,7 +180,7 @@ const EditProfile = () => {
             <TextField label="Professional Title" fullWidth value={profile.role} onChange={(e) => handleProfileChange('role', e.target.value)} sx={inputSx}
               helperText={<Typography variant="caption" sx={{ color: '#4a4a5e' }}>e.g. Music Producer, Mixing Engineer, Vocalist</Typography>} />
             <TextField label="Bio" fullWidth multiline rows={4} value={profile.bio} onChange={(e) => handleProfileChange('bio', e.target.value)} sx={inputSx}
-              helperText={<Typography variant="caption" sx={{ color: '#4a4a5e' }}>{profile.bio.length}/500 characters</Typography>} />
+              helperText={<Typography variant="caption" sx={{ color: '#4a4a5e' }}>{profile.bio?.length || 0}/500 characters</Typography>} />
           </Box>
         </Box>
       )}
@@ -132,6 +192,9 @@ const EditProfile = () => {
           <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>Add New Work</Typography>
             <FileUploadZone files={portfolioFiles} onChange={setPortfolioFiles} accept="image/*,audio/*,video/*" maxFiles={10} accent="#a855f7" />
+            <Typography variant="caption" sx={{ color: '#a855f7', display: 'block', mt: 2 }}>
+              Note: Portfolio file uploading is simplified for this phase. 
+            </Typography>
           </Box>
 
           {/* Existing items */}

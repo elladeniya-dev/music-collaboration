@@ -41,4 +41,15 @@ public class ServiceService {
                 .map(serviceMapper::toResponse)
                 .collect(Collectors.toList());
     }
+
+    public void deleteService(String serviceId, String userId) {
+        ServiceMarketplace service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Service not found"));
+        
+        if (!service.getSellerId().equals(userId)) {
+            throw new RuntimeException("You are not authorized to delete this service");
+        }
+        
+        serviceRepository.delete(service);
+    }
 }

@@ -1,6 +1,9 @@
 package com.harmonix.controller;
 
 import com.harmonix.constant.AppConstants;
+import com.harmonix.dto.request.AvailabilityRequest;
+import com.harmonix.dto.request.PortfolioRequest;
+import com.harmonix.dto.request.ProfileUpdateRequest;
 import com.harmonix.dto.request.UserTypeUpdateRequest;
 import com.harmonix.dto.response.ApiResponse;
 import com.harmonix.dto.response.UserResponse;
@@ -8,6 +11,7 @@ import com.harmonix.entity.User;
 import com.harmonix.exception.ResourceNotFoundException;
 import com.harmonix.mapper.UserMapper;
 import com.harmonix.repository.UserRepository;
+import com.harmonix.service.UserService;
 import com.harmonix.util.AuthUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -26,6 +30,9 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final UserService userService;
+
+    // --- Original Endpoints ---
 
     @GetMapping("/{email}")
     public ResponseEntity<ApiResponse<UserResponse>> getUserByEmail(@PathVariable String email) {
@@ -69,5 +76,63 @@ public class UserController {
         
         UserResponse userResponse = userMapper.toResponse(user);
         return ResponseEntity.ok(ApiResponse.success(userResponse));
+    }
+
+    // --- New Profile System Endpoints ---
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(HttpServletRequest request) {
+        User user = userService.getCurrentUserProfile(request);
+        return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(user)));
+    }
+
+    @GetMapping("/id/{id}")
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable String id) {
+        User user = userService.getUserById(id);
+        return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(user)));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
+            HttpServletRequest request,
+            @Valid @RequestBody ProfileUpdateRequest updateRequest) {
+
+        User currentUser = AuthUtil.requireUser(request, userRepository);
+        User updatedUser = userService.updateProfile(currentUser.getId(), updateRequest);
+        
+        return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(updatedUser)));
+    }
+
+    @PostMapping("/portfolio")
+    public ResponseEntity<ApiResponse<UserResponse>> addPortfolioItem(
+            HttpServletRequest request,
+            @Valid @RequestBody PortfolioRequest portfolioRequest) {
+
+        User currentUser = AuthUtil.requireUser(request, userRepository);
+        User updatedUser = userService.addPortfolioItem(currentUser.getId(), portfolioRequest);
+        
+        return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(updatedUser)));
+    }
+
+    @DeleteMapping("/portfolio/{portfolioId}")
+    public ResponseEntity<ApiResponse<UserResponse>> deletePortfolioItem(
+            HttpServletRequest request,
+            @PathVariable String portfolioId) {
+
+        User currentUser = AuthUtil.requireUser(request, userRepository);
+        User updatedUser = userService.deletePortfolioItem(currentUser.getId(), portfolioId);
+        
+        return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(updatedUser)));
+    }
+
+    @PutMapping("/availability")
+    public ResponseEntity<ApiResponse<UserResponse>> updateAvailability(
+            HttpServletRequest request,
+            @Valid @RequestBody AvailabilityRequest availabilityRequest) {
+
+        User currentUser = AuthUtil.requireUser(request, userRepository);
+        User updatedUser = userService.updateAvailability(currentUser.getId(), availabilityRequest);
+        
+        return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(updatedUser)));
     }
 }

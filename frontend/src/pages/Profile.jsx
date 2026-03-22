@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, Typography, Avatar, Button, Rating, Chip } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Avatar, Button, Rating, Chip, CircularProgress } from '@mui/material';
 import MessageIcon from '@mui/icons-material/Message';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -18,16 +18,8 @@ import AudioPlayer from '../components/AudioPlayer';
 import PortfolioItem from '../components/PortfolioItem';
 import ReviewCard from '../components/ReviewCard';
 import ServiceCard from '../components/ServiceCard';
-import { showSuccess } from '../utils';
-
-const MOCK_PORTFOLIO = [
-  { id: 'p1', title: 'Summer Vibes Beat', type: 'audio', duration: 195, description: 'Lo-fi hip-hop instrumental' },
-  { id: 'p2', title: 'Midnight R&B Session', type: 'audio', duration: 240, description: 'Smooth R&B production' },
-  { id: 'p3', title: 'Album Cover Design', type: 'image', description: 'Dark aesthetic artwork' },
-  { id: 'p4', title: 'EDM Drop Sequence', type: 'audio', duration: 165, description: 'High-energy festival banger' },
-  { id: 'p5', title: 'Music Video Teaser', type: 'video', description: 'Cinematic promo clip' },
-  { id: 'p6', title: 'Trap Beat Collection', type: 'audio', duration: 210, description: 'Hard-hitting 808 beats' },
-];
+import { showSuccess, showError } from '../utils';
+import { userService, serviceService, orderService } from '../services';
 
 const MOCK_REVIEWS = [
   { id: 'r1', name: 'Sarah Chen', rating: 5, comment: 'Absolutely incredible work! The mix was clean, punchy, and exactly what I envisioned. Will definitely hire again for my next project.', date: '2 weeks ago' },
@@ -35,22 +27,72 @@ const MOCK_REVIEWS = [
   { id: 'r3', name: 'Aisha Williams', rating: 5, comment: 'Professional, talented, and easy to work with. The final master sounded radio-ready. Best investment I\'ve made in my music career.', date: '2 months ago' },
 ];
 
-const MOCK_SERVICES = [
-  { id: 's1', title: 'Professional Mix & Master', price: 150, sellerName: '', category: 'Mixing & Mastering', deliveryTime: 3, tags: ['mixing', 'mastering', 'pro'] },
-  { id: 's2', title: 'Custom Beat Production', price: 75, sellerName: '', category: 'Music Production', deliveryTime: 5, tags: ['beats', 'original'] },
-];
-
-const SKILLS = ['Music Production', 'Mixing', 'Mastering', 'Beat Making', 'Sound Design', 'Vocal Tuning', 'Arrangement', 'Composition'];
-const TOOLS = ['FL Studio', 'Ableton Live', 'Logic Pro X', 'Pro Tools', 'iZotope Ozone', 'FabFilter', 'Waves', 'Native Instruments'];
-const GENRES = ['Lo-fi', 'Hip-Hop', 'R&B', 'Trap', 'EDM', 'Pop', 'Soul', 'Ambient'];
-
 const Profile = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [following, setFollowing] = useState(false);
   const [activeSection, setActiveSection] = useState('portfolio');
-  const { level, badges } = getMockUserMeta(user?.name);
-  const displayName = user?.name || 'Artist';
+  
+  const [profileData, setProfileData] = useState(null);
+  const [sellerServices, setSellerServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const pData = await userService.getCurrentUser();
+        setProfileData(pData);
+        
+        // fetch services
+        if (pData?.id) {
+            const sData = await serviceService.getServicesBySeller(pData.id);
+            setSellerServices(sData || []);
+        }
+      } catch (err) {
+        showError('Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleOrderService = async (svc, pkg, price) => {
+     try {
+         await orderService.createOrder(svc.id);
+         showSuccess(`🎉 Order placed for ${svc.title} — $${price}`);
+     } catch (err) {
+         showError('Failed to place order.');
+     }
+  };
+
+  const handleDeleteService = async (serviceId) => {
+    if (!window.confirm("Are you sure you want to delete this service?")) return;
+    try {
+      await serviceService.deleteService(serviceId);
+      setSellerServices(prev => prev.filter(s => s.id !== serviceId));
+      showSuccess("Service deleted successfully");
+    } catch (error) {
+      showError("Failed to delete service");
+    }
+  };
+
+  if (loading || !profileData) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
+        <CircularProgress sx={{ color: '#a855f7' }} />
+      </Box>
+    );
+  }
+
+  const { level, badges } = getMockUserMeta(profileData.name);
+  const displayName = profileData.name || 'Artist';
+  
+  const portfolio = profileData.portfolio || [];
+  const skills = profileData.skills || [];
+  const tools = profileData.tools || [];
+  const genres = profileData.genres || [];
 
   const sections = ['portfolio', 'about', 'services', 'reviews'];
 
@@ -82,13 +124,13 @@ const Profile = () => {
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5, flexWrap: 'wrap' }}>
                 <Typography variant="h5" fontWeight={800} sx={{ color: '#e0e0ef', letterSpacing: '-0.5px' }}>{displayName}</Typography>
-                <StatusBadge status="available" />
+                <StatusBadge status={profileData.availability?.toLowerCase() || 'available'} />
                 <UserLevelChip level={level} />
               </Box>
-              <Typography variant="body2" sx={{ color: '#a855f7', fontWeight: 600, mb: 1 }}>Music Producer & Audio Engineer</Typography>
+              <Typography variant="body2" sx={{ color: '#a855f7', fontWeight: 600, mb: 1 }}>{profileData.role || 'Music Professional'}</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                <Rating value={4.8} readOnly precision={0.1} size="small" sx={{ '& .MuiRating-iconFilled': { color: '#f59e0b' }, '& .MuiRating-iconEmpty': { color: 'rgba(255,255,255,0.08)' }, fontSize: '0.9rem' }} />
-                <Typography variant="caption" sx={{ color: '#5c5c72' }}>4.8 (127 reviews)</Typography>
+                <Rating value={profileData.averageRating || 0} readOnly precision={0.1} size="small" sx={{ '& .MuiRating-iconFilled': { color: '#f59e0b' }, '& .MuiRating-iconEmpty': { color: 'rgba(255,255,255,0.08)' }, fontSize: '0.9rem' }} />
+                <Typography variant="caption" sx={{ color: '#5c5c72' }}>{profileData.averageRating || 0} ({profileData.totalReviews || 0} reviews)</Typography>
               </Box>
               <UserBadges badges={badges} />
             </Box>
@@ -122,10 +164,10 @@ const Profile = () => {
       {/* ═══════════ STATS BAR ═══════════ */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
-          { label: 'Completed', value: '47', icon: <CheckCircleIcon sx={{ fontSize: 18 }} />, color: '#10b981' },
-          { label: 'Active Jobs', value: '3', icon: <WorkIcon sx={{ fontSize: 18 }} />, color: '#f59e0b' },
+          { label: 'Completed', value: profileData.completedOrders || 0, icon: <CheckCircleIcon sx={{ fontSize: 18 }} />, color: '#10b981' },
+          { label: 'Active Jobs', value: '0', icon: <WorkIcon sx={{ fontSize: 18 }} />, color: '#f59e0b' },
           { label: 'Avg Response', value: '< 1hr', icon: <AccessTimeIcon sx={{ fontSize: 18 }} />, color: '#06b6d4' },
-          { label: 'Rating', value: '4.8', icon: <StarIcon sx={{ fontSize: 18 }} />, color: '#a855f7' },
+          { label: 'Rating', value: profileData.averageRating || 'N/A', icon: <StarIcon sx={{ fontSize: 18 }} />, color: '#a855f7' },
         ].map(stat => (
           <Box key={stat.label} sx={{ bgcolor: '#16161f', borderRadius: '14px', p: 2.5, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
             <Box sx={{ display: 'inline-flex', width: 36, height: 36, borderRadius: '10px', alignItems: 'center', justifyContent: 'center', bgcolor: `${stat.color}12`, color: stat.color, mb: 1 }}>{stat.icon}</Box>
@@ -154,11 +196,15 @@ const Profile = () => {
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" fontWeight={700} sx={{ color: '#e0e0ef' }}>Portfolio</Typography>
-            <Chip label={`${MOCK_PORTFOLIO.length} items`} size="small"
+            <Chip label={`${portfolio.length} items`} size="small"
               sx={{ bgcolor: 'rgba(168,85,247,0.08)', color: '#c084fc', fontWeight: 600, fontSize: '0.6rem', height: 22 }} />
           </Box>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {MOCK_PORTFOLIO.map((item, i) => <PortfolioItem key={item.id} item={item} index={i} />)}
+            {portfolio.length > 0 ? (
+               portfolio.map((item, i) => <PortfolioItem key={item.id} item={item} index={i} />)
+            ) : (
+               <Typography variant="body2" sx={{ color: '#5c5c72' }}>No portfolio items uploaded.</Typography>
+            )}
           </div>
         </Box>
       )}
@@ -169,16 +215,17 @@ const Profile = () => {
           <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>About</Typography>
             <Typography variant="body2" sx={{ color: '#8b8b9e', lineHeight: 1.8 }}>
-              Passionate music producer with 8+ years of experience in crafting beats and mixing tracks across multiple genres.
-              From lo-fi hip-hop to high-energy EDM, I bring a unique sonic signature to every project. I've worked with
-              independent artists worldwide and contributed to tracks with millions of streams. My studio is equipped with
-              top-tier gear and I'm committed to delivering broadcast-quality audio every time.
+              {profileData.bio || 'No bio provided yet. Edit your profile to add some information about yourself!'}
             </Typography>
           </Box>
 
           <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>Skills</Typography>
-            <TagGroup tags={SKILLS} max={10} />
+            {skills.length > 0 ? (
+               <TagGroup tags={skills} max={10} />
+            ) : (
+               <Typography variant="caption" sx={{ color: '#5c5c72' }}>No skills added.</Typography>
+            )}
           </Box>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -187,11 +234,19 @@ const Profile = () => {
                 <MusicNoteIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'text-bottom', color: '#a855f7' }} />
                 Tools & DAWs
               </Typography>
-              <TagGroup tags={TOOLS} variant="outline" max={10} />
+              {tools.length > 0 ? (
+                  <TagGroup tags={tools} variant="outline" max={10} />
+              ) : (
+                  <Typography variant="caption" sx={{ color: '#5c5c72' }}>No tools added.</Typography>
+              )}
             </Box>
             <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
               <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>🎵 Genres</Typography>
-              <TagGroup tags={GENRES} variant="outline" max={10} />
+              {genres.length > 0 ? (
+                  <TagGroup tags={genres} variant="outline" max={10} />
+              ) : (
+                  <Typography variant="caption" sx={{ color: '#5c5c72' }}>No genres added.</Typography>
+              )}
             </Box>
           </div>
         </Box>
@@ -201,12 +256,16 @@ const Profile = () => {
       {activeSection === 'services' && (
         <Box>
           <Typography variant="h6" fontWeight={700} sx={{ color: '#e0e0ef', mb: 3 }}>Services</Typography>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {MOCK_SERVICES.map(s => (
-              <ServiceCard key={s.id} service={{ ...s, sellerName: displayName }}
-                onOrder={(svc, pkg, price) => showSuccess(`🎉 Order placed! (${pkg}) — $${price}`)} />
-            ))}
-          </div>
+          {sellerServices.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {sellerServices.map(s => (
+                  <ServiceCard key={s.id} service={{ ...s, sellerName: displayName }}
+                    onOrder={handleOrderService} onDelete={handleDeleteService} />
+                ))}
+              </div>
+          ) : (
+             <Typography variant="body2" sx={{ color: '#5c5c72' }}>No services offered yet.</Typography>
+          )}
         </Box>
       )}
 
@@ -217,8 +276,8 @@ const Profile = () => {
             <Typography variant="h6" fontWeight={700} sx={{ color: '#e0e0ef' }}>Reviews</Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <StarIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
-              <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef' }}>4.8</Typography>
-              <Typography variant="caption" sx={{ color: '#5c5c72' }}>(127)</Typography>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef' }}>{profileData.averageRating || 0}</Typography>
+              <Typography variant="caption" sx={{ color: '#5c5c72' }}>({profileData.totalReviews || 0})</Typography>
             </Box>
           </Box>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

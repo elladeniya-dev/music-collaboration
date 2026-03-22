@@ -28,6 +28,51 @@ class UserService {
       throw error;
     }
   }
+
+  async getCurrentUser() {
+    try {
+      const response = await axiosInstance.get('/users/me');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateProfile(data) {
+    try {
+      const response = await axiosInstance.put('/users/profile', data);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async addPortfolioItem(data) {
+    try {
+      const response = await axiosInstance.post('/users/portfolio', data);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deletePortfolioItem(id) {
+    try {
+      const response = await axiosInstance.delete(`/users/portfolio/${id}`);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateAvailability(availability) {
+    try {
+      const response = await axiosInstance.put('/users/availability', { availability });
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new UserService();

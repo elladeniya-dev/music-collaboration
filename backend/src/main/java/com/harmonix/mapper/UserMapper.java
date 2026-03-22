@@ -18,6 +18,17 @@ public class UserMapper {
                 .name(user.getName())
                 .profileImage(user.getProfileImage())
                 .userType(user.getUserType())
+                .role(user.getRole())
+                .bio(user.getBio())
+                .skills(user.getSkills())
+                .tools(user.getTools())
+                .genres(user.getGenres())
+                .portfolio(user.getPortfolio())
+                .averageRating(user.getAverageRating())
+                .totalReviews(user.getTotalReviews())
+                .completedOrders(user.getCompletedOrders())
+                .availability(user.getAvailability())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 }

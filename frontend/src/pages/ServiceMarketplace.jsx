@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import ServiceCard from '../components/ServiceCard';
-import { Typography, Box, TextField, InputAdornment, Button, Chip } from '@mui/material';
+import { Typography, Box, TextField, InputAdornment, Button } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
-import { serviceService } from '../services';
-import { showSuccess } from '../utils';
+import { serviceService, orderService } from '../services';
+import { showSuccess, showError } from '../utils';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import HeadphonesIcon from '@mui/icons-material/Headphones';
 import MicIcon from '@mui/icons-material/Mic';
@@ -24,13 +24,6 @@ const CATEGORIES = [
   { label: 'Songwriting', icon: <LibraryMusicIcon />, color: '#06b6d4' },
   { label: 'Video Production', icon: <VideocamIcon />, color: '#f97316' },
   { label: 'Graphic Design', icon: <BrushIcon />, color: '#ef4444' },
-];
-
-const MOCK_SERVICES = [
-  { id: 'm1', title: 'Professional Mix & Master for Your Track', description: 'Industry-standard mixing and mastering with analog warmth and digital precision.', price: 150, sellerName: 'AudioPro', category: 'Mixing & Mastering', deliveryTime: 3, tags: ['mixing', 'mastering', 'pro'] },
-  { id: 'm2', title: 'Custom Beat Production – Any Genre', description: 'Original beats from scratch. Hip-hop, R&B, Pop, Trap, Lo-fi and more.', price: 75, sellerName: 'BeatMaker', category: 'Music Production', deliveryTime: 5, tags: ['beats', 'hip-hop', 'original'] },
-  { id: 'm3', title: 'Professional Vocal Recording & Tuning', description: 'Clean vocal recording, pitch correction, and professional comping.', price: 100, sellerName: 'VocalStudio', category: 'Vocals', deliveryTime: 2, tags: ['vocals', 'recording', 'tuning'] },
-  { id: 'm4', title: 'Cinematic Sound Design Package', description: 'Custom sound effects, ambient textures, and cinematic soundscapes.', price: 200, sellerName: 'SoundWizard', category: 'Sound Design', deliveryTime: 7, tags: ['sfx', 'cinematic', 'foley'] },
 ];
 
 const SkeletonCard = () => (
@@ -63,8 +56,8 @@ const ServiceMarketplace = () => {
   useEffect(() => {
     serviceService.getAllServices()
       .then((data) => {
-        setServices(data);
-        setFiltered(data);
+        setServices(data || []);
+        setFiltered(data || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -87,8 +80,28 @@ const ServiceMarketplace = () => {
     setFiltered(result);
   }, [search, services, activeCategory]);
 
-  const displayServices = filtered.length > 0 ? filtered : MOCK_SERVICES;
-  const showMock = !loading && filtered.length === 0;
+  const handleOrder = async (svc, pkg, price) => {
+    try {
+      await orderService.createOrder(svc.id);
+      showSuccess(`🎉 Order placed for ${svc.title} (${pkg}) — $${price}`);
+    } catch (error) {
+       // Display meaningful error if buyer == seller
+       const msg = error.response?.data?.message || 'Failed to place order';
+       showError(msg);
+    }
+  };
+
+  const handleDeleteService = async (serviceId) => {
+    if (!window.confirm("Are you sure you want to delete this service?")) return;
+    try {
+      await serviceService.deleteService(serviceId);
+      setServices(prev => prev.filter(s => s.id !== serviceId));
+      setFiltered(prev => prev.filter(s => s.id !== serviceId));
+      showSuccess("Service deleted successfully");
+    } catch (error) {
+       showError("Failed to delete service");
+    }
+  };
 
   return (
     <Box>
@@ -209,13 +222,8 @@ const ServiceMarketplace = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight={800} sx={{ color: '#e0e0ef', letterSpacing: '-0.5px' }}>
-              {activeCategory ? activeCategory : showMock ? 'Featured Services' : 'All Services'}
+              {activeCategory ? activeCategory : 'All Services'}
             </Typography>
-            {showMock && (
-              <Typography variant="caption" sx={{ color: '#5c5c72' }}>
-                Sample services — be the first to list yours!
-              </Typography>
-            )}
           </Box>
           <Button
             onClick={() => navigate('/services/create')}
@@ -240,18 +248,23 @@ const ServiceMarketplace = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {displayServices.map((service) => (
-              <ServiceCard key={service.id} service={service} onOrder={(svc, pkg, price) => showSuccess(`🎉 Order placed! ${svc.title} (${pkg}) — $${price}`)} />
+            {filtered.map((service) => (
+              <ServiceCard 
+                key={service.id} 
+                service={service} 
+                onOrder={handleOrder} 
+                onDelete={handleDeleteService}
+              />
             ))}
           </div>
         )}
 
-        {/* Empty state for filtered */}
-        {!loading && filtered.length === 0 && search && (
+        {/* Empty state */}
+        {!loading && filtered.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 8 }}>
             <StorefrontIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.06)', mb: 2 }} />
             <Typography variant="h6" sx={{ color: '#5c5c72' }}>
-              No services match "{search}"
+              {search ? `No services match "${search}"` : "No services found. Be the first to create one!"}
             </Typography>
           </Box>
         )}

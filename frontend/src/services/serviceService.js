@@ -40,6 +40,15 @@ class ServiceService {
       throw error;
     }
   }
+
+  async deleteService(id) {
+    try {
+      const response = await axiosInstance.delete(`/services/${id}`);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new ServiceService();

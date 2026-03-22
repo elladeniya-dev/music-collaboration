@@ -62,4 +62,14 @@ public class ServiceController {
         List<ServiceResponse> services = serviceService.getBySeller(sellerId);
         return ResponseEntity.ok(ApiResponse.success(services));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteService(
+            HttpServletRequest request,
+            @PathVariable String id
+    ) {
+        User user = AuthUtil.requireUser(request, userRepository);
+        serviceService.deleteService(id, user.getId());
+        return ResponseEntity.ok(ApiResponse.success("Service deleted successfully", null));
+    }
 }
