@@ -108,7 +108,7 @@ const Profile = () => {
         </Box>
 
         {/* Profile card overlay */}
-        <Box sx={{ position: 'relative', mt: -8, mx: { xs: 2, md: 4 }, bgcolor: '#16161f', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', p: { xs: 3, md: 4 } }}>
+        <Box sx={{ position: 'relative', zIndex: 2, mt: -8, mx: { xs: 2, md: 4 }, bgcolor: '#16161f', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', p: { xs: 3, md: 4 } }}>
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, alignItems: { md: 'flex-start' } }}>
             {/* Avatar */}
             <Box sx={{ position: 'relative', flexShrink: 0 }}>

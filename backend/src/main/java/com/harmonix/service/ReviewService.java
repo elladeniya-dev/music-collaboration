@@ -5,6 +5,7 @@ import com.harmonix.dto.response.ReviewResponse;
 import com.harmonix.entity.Order;
 import com.harmonix.entity.OrderStatus;
 import com.harmonix.entity.Review;
+import com.harmonix.entity.NotificationType;
 import com.harmonix.entity.User;
 import com.harmonix.mapper.ReviewMapper;
 import com.harmonix.repository.OrderRepository;
@@ -24,6 +25,7 @@ public class ReviewService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ReviewMapper reviewMapper;
+    private final NotificationService notificationService;
 
     public ReviewResponse addReview(String reviewerId, String reviewerName, ReviewCreateRequest request) {
         
@@ -52,6 +54,14 @@ public class ReviewService {
 
         // 6. Update Seller Rating
         updateSellerRating(order.getSellerId());
+
+        // 7. Send Notification
+        notificationService.createNotification(
+            order.getSellerId(),
+            NotificationType.REVIEW,
+            reviewerName + " left a " + request.getRating() + "-star review on your order",
+            order.getId()
+        );
 
         return reviewMapper.toResponse(savedReview);
     }

@@ -8,3 +8,6 @@ export { default as websocketService } from './websocketService';
 export { default as serviceService } from './serviceService';
 export { default as orderService } from './orderService';
 export { default as reviewService } from './reviewService';
+
+export { default as notificationService } from './notificationService';
+export { default as dashboardService } from './dashboardService';

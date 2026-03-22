@@ -3,6 +3,7 @@ package com.harmonix.service;
 import com.harmonix.entity.Order;
 import com.harmonix.entity.OrderStatus;
 import com.harmonix.entity.ServiceMarketplace;
+import com.harmonix.entity.NotificationType;
 import com.harmonix.exception.ResourceNotFoundException;
 import com.harmonix.exception.UnauthorizedException;
 import com.harmonix.repository.OrderRepository;
@@ -21,6 +22,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ServiceRepository serviceRepository;
+    private final NotificationService notificationService;
 
     public Order getOrderById(String orderId) {
         return orderRepository.findById(orderId)
@@ -46,7 +48,16 @@ public class OrderService {
                 .updatedAt(new Date())
                 .build();
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        
+        notificationService.createNotification(
+            service.getSellerId(), 
+            NotificationType.ORDER, 
+            "New order received: " + service.getTitle(), 
+            savedOrder.getId()
+        );
+
+        return savedOrder;
     }
 
     public List<Order> getMyOrders(String userId) {
@@ -89,7 +100,16 @@ public class OrderService {
         order.setDeliveryFileUrl(deliveryFileUrl);
         order.setUpdatedAt(new Date());
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        
+        notificationService.createNotification(
+            order.getBuyerId(),
+            NotificationType.ORDER,
+            "Your order has been delivered: " + order.getServiceTitle(),
+            savedOrder.getId()
+        );
+
+        return savedOrder;
     }
 
     public Order completeOrder(String buyerId, String orderId) {

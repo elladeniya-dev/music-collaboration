@@ -1,4 +1,4 @@
-package com.harmonix.dto.request;
+package com.harmonix.dto.response;
 
 import com.harmonix.entity.OrderStatus;
 import lombok.AllArgsConstructor;

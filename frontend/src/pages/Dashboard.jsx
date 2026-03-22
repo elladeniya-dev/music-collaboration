@@ -1,33 +1,33 @@
-import React from 'react';
-import { Box, Typography, Avatar } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Typography, CircularProgress, Skeleton } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import StarIcon from '@mui/icons-material/Star';
 import PeopleIcon from '@mui/icons-material/People';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import WorkIcon from '@mui/icons-material/Work';
-import GroupIcon from '@mui/icons-material/Group';
 import AudioPlayer from '../components/AudioPlayer';
 import { UserLevelChip, getMockUserMeta } from '../components/UserBadge';
 import StatusBadge from '../components/StatusBadge';
 import { useUser } from '../context/UserContext';
+import { dashboardService } from '../services';
 
-const STATS = [
-  { label: 'Total Earnings', value: '$4,280', change: '+12.5%', icon: <AttachMoneyIcon />, color: '#10b981', trend: 'up' },
-  { label: 'Active Orders', value: '8', change: '+3', icon: <ShoppingCartIcon />, color: '#a855f7', trend: 'up' },
-  { label: 'Avg Rating', value: '4.8', change: '+0.2', icon: <StarIcon />, color: '#f59e0b', trend: 'up' },
-  { label: 'Profile Views', value: '1,247', change: '+23%', icon: <PeopleIcon />, color: '#06b6d4', trend: 'up' },
-];
+const formatTimeAgo = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  
+  if (diffInSeconds < 60) return 'Just now';
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays}d ago`;
+};
 
-const RECENT_ACTIVITY = [
-  { type: 'order', text: 'New order from Sarah C.', subtext: 'Custom Beat Production', time: '2 min ago', icon: <ShoppingCartIcon sx={{ fontSize: 16 }} />, color: '#10b981' },
-  { type: 'collab', text: 'Maya T. joined your collaboration', subtext: 'R&B Track Session', time: '15 min ago', icon: <GroupIcon sx={{ fontSize: 16 }} />, color: '#ec4899' },
-  { type: 'review', text: '5-star review from Jake W.', subtext: '"Incredible mixing quality!"', time: '1 hour ago', icon: <StarIcon sx={{ fontSize: 16 }} />, color: '#f59e0b' },
-  { type: 'job', text: 'Your proposal was accepted', subtext: 'Vocal Recording for Indie Album', time: '3 hours ago', icon: <WorkIcon sx={{ fontSize: 16 }} />, color: '#a855f7' },
-  { type: 'order', text: 'Order completed: Mixing & Mastering', subtext: 'Delivered to Leo M.', time: 'Yesterday', icon: <ShoppingCartIcon sx={{ fontSize: 16 }} />, color: '#6366f1' },
-];
-
+// Keeping static layout elements matching previous style
 const QUICK_TRACKS = [
   { title: 'Summer Vibes Beat', seed: 'beat1', duration: 195 },
   { title: 'Lo-fi Chill Mix', seed: 'lofi2', duration: 240 },
@@ -39,6 +39,82 @@ const MONTHLY_DATA = [35, 52, 48, 65, 72, 58, 80, 95, 88, 110, 105, 130];
 const Dashboard = () => {
   const { user } = useUser();
   const { level, badges } = getMockUserMeta(user?.name);
+  
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const result = await dashboardService.getDashboardData();
+        setData(result);
+      } catch (err) {
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user) {
+      fetchDashboard();
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 4 }, py: 3 }}>
+        <Skeleton variant="text" width={300} height={60} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} variant="rounded" height={120} sx={{ bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '16px' }} />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <Skeleton variant="rounded" height={300} sx={{ bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '16px', gridColumn: { lg: 'span 2' } }} />
+          <Skeleton variant="rounded" height={300} sx={{ bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '16px' }} />
+        </div>
+      </Box>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 4 }, py: 3, textAlign: 'center' }}>
+        <Typography color="error">{error || 'Could not load data'}</Typography>
+      </Box>
+    );
+  }
+
+  const STATS = [
+    { label: 'Total Earnings', value: `$${data.totalEarnings?.toLocaleString() || '0'}`, change: '+8%', icon: <AttachMoneyIcon />, color: '#10b981', trend: 'up' },
+    { label: 'Completed Orders', value: data.completedOrders?.toString() || '0', change: '+2', icon: <ShoppingCartIcon />, color: '#a855f7', trend: 'up' },
+    { label: 'Active Orders', value: data.activeOrders?.toString() || '0', change: 'Current', icon: <ShoppingCartIcon />, color: '#06b6d4', trend: 'up' },
+    { label: 'Avg Rating', value: data.averageRating?.toFixed(1) || '0.0', change: `${data.totalReviews || 0} reviews`, icon: <StarIcon />, color: '#f59e0b', trend: 'up' },
+  ];
+
+  const recentOrdersMapped = (data.recentOrders || []).map(o => ({
+    id: `order_${o.id}`,
+    type: 'order',
+    text: o.serviceTitle || `Order #${o.id.substring(0, 6)}`,
+    subtext: `${o.status} • $${o.price}`,
+    time: formatTimeAgo(o.createdAt),
+    icon: <ShoppingCartIcon sx={{ fontSize: 16 }} />,
+    color: o.status === 'COMPLETED' || o.status === 'DELIVERED' ? '#10b981' : '#a855f7',
+    date: new Date(o.createdAt)
+  }));
+
+  const recentReviewsMapped = (data.recentReviews || []).map(r => ({
+    id: `review_${r.id}`,
+    type: 'review',
+    text: `${r.rating}-Star Review from ${r.reviewerName || 'A buyer'}`,
+    subtext: `"${r.comment || 'Great service!'}"`,
+    time: formatTimeAgo(r.createdAt),
+    icon: <StarIcon sx={{ fontSize: 16 }} />,
+    color: '#f59e0b',
+    date: new Date(r.createdAt)
+  }));
+
+  const combinedActivity = [...recentOrdersMapped, ...recentReviewsMapped]
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 5);
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 4 }, py: 3 }}>
@@ -52,6 +128,7 @@ const Dashboard = () => {
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <UserLevelChip level={level} />
+          <Typography variant="caption" sx={{ color: '#5c5c72', ml: 1 }}>{data.totalOrders} Lifetime Orders</Typography>
         </Box>
       </Box>
 
@@ -109,24 +186,28 @@ const Dashboard = () => {
         {/* Recent Activity */}
         <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
           <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>Recent Activity</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {RECENT_ACTIVITY.map((activity, i) => (
-              <Box key={i} sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
-                <Box sx={{ width: 28, height: 28, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: `${activity.color}12`, color: activity.color, flexShrink: 0, mt: 0.25 }}>
-                  {activity.icon}
+          {combinedActivity.length === 0 ? (
+            <Typography variant="body2" sx={{ color: '#71717a', textAlign: 'center', py: 4 }}>No recent activity yet</Typography>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {combinedActivity.map((activity) => (
+                <Box key={activity.id} sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+                  <Box sx={{ width: 28, height: 28, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: `${activity.color}12`, color: activity.color, flexShrink: 0, mt: 0.25 }}>
+                    {activity.icon}
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="caption" fontWeight={600} sx={{ color: '#e0e0ef', display: 'block', lineHeight: 1.3, fontSize: '0.72rem' }}>{activity.text}</Typography>
+                    <Typography variant="caption" sx={{ color: '#5c5c72', fontSize: '0.62rem' }}>{activity.subtext}</Typography>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: '#4a4a5e', fontSize: '0.55rem', whiteSpace: 'nowrap', flexShrink: 0 }}>{activity.time}</Typography>
                 </Box>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="caption" fontWeight={600} sx={{ color: '#e0e0ef', display: 'block', lineHeight: 1.3, fontSize: '0.72rem' }}>{activity.text}</Typography>
-                  <Typography variant="caption" sx={{ color: '#5c5c72', fontSize: '0.62rem' }}>{activity.subtext}</Typography>
-                </Box>
-                <Typography variant="caption" sx={{ color: '#4a4a5e', fontSize: '0.55rem', whiteSpace: 'nowrap', flexShrink: 0 }}>{activity.time}</Typography>
-              </Box>
-            ))}
-          </Box>
+              ))}
+            </Box>
+          )}
         </Box>
       </div>
 
-      {/* Audio Previews */}
+      {/* Audio Previews Placeholder */}
       <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
