@@ -1,10 +1,21 @@
-import React from 'react';
-import { Box, Typography, Chip, Rating } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Chip, Rating, Button } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PersonIcon from '@mui/icons-material/Person';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { UserLevelChip, UserBadges, getMockUserMeta } from './UserBadge';
+import StatusBadge, { getMockStatus } from './StatusBadge';
+import AudioPlayer from './AudioPlayer';
+import { TagGroup } from './Tag';
 
-const ServiceCard = ({ service }) => {
-  // Generate a deterministic placeholder gradient based on title
+const PACKAGES = ['Basic', 'Standard', 'Premium'];
+const PKG_MULTIPLIERS = [1, 1.8, 3];
+const PKG_COLORS = ['#5c5c72', '#a855f7', '#f59e0b'];
+const PKG_DELIVERY = [1, 0.8, 0.6];
+
+const ServiceCard = ({ service, onOrder }) => {
+  const [selectedPkg, setSelectedPkg] = useState(0);
+
   const gradients = [
     'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
@@ -16,170 +27,97 @@ const ServiceCard = ({ service }) => {
     'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
   ];
   const gradientIndex = (service.title?.length || 0) % gradients.length;
+  const basePrice = service.price || 50;
+  const baseDelivery = service.deliveryTime || 5;
+  const pkgPrice = (basePrice * PKG_MULTIPLIERS[selectedPkg]).toFixed(0);
+  const pkgDelivery = Math.max(1, Math.round(baseDelivery * PKG_DELIVERY[selectedPkg]));
+  const { level, badges } = getMockUserMeta(service.sellerName);
+  const sellerStatus = getMockStatus(service.sellerName);
 
   return (
-    <Box
-      sx={{
-        bgcolor: '#16161f',
-        borderRadius: '16px',
-        overflow: 'hidden',
-        border: '1px solid rgba(255,255,255,0.05)',
-        transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-        cursor: 'pointer',
-        '&:hover': {
-          transform: 'translateY(-6px) scale(1.02)',
-          boxShadow: '0 20px 60px rgba(168, 85, 247, 0.15), 0 0 0 1px rgba(168, 85, 247, 0.15)',
-          borderColor: 'rgba(168, 85, 247, 0.2)',
-        },
-      }}
-    >
-      {/* Image / Gradient Placeholder */}
-      <Box
-        sx={{
-          height: 160,
-          background: gradients[gradientIndex],
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Price badge */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 12,
-            right: 12,
-            bgcolor: 'rgba(0,0,0,0.7)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '10px',
-            px: 1.5,
-            py: 0.5,
-          }}
-        >
-          <Typography variant="subtitle2" fontWeight={800} sx={{ color: '#10b981' }}>
-            ${service.price?.toFixed(2) || '0.00'}
-          </Typography>
-        </Box>
-
-        {/* Category chip */}
+    <Box sx={{
+      bgcolor: '#16161f', borderRadius: '16px', overflow: 'hidden',
+      border: '1px solid rgba(255,255,255,0.05)',
+      transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+      '&:hover': { transform: 'translateY(-6px) scale(1.01)', boxShadow: '0 20px 60px rgba(168, 85, 247, 0.12), 0 0 0 1px rgba(168, 85, 247, 0.12)', borderColor: 'rgba(168, 85, 247, 0.18)' },
+    }}>
+      {/* Image / Gradient */}
+      <Box sx={{ height: 120, background: gradients[gradientIndex], position: 'relative', overflow: 'hidden' }}>
         {service.category && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 12,
-              left: 12,
-            }}
-          >
-            <Chip
-              label={service.category}
-              size="small"
-              sx={{
-                bgcolor: 'rgba(0,0,0,0.6)',
-                backdropFilter: 'blur(10px)',
-                color: 'white',
-                fontWeight: 600,
-                fontSize: '0.7rem',
-                height: 24,
-                borderRadius: '8px',
-              }}
-            />
-          </Box>
+          <Chip label={service.category} size="small"
+            sx={{ position: 'absolute', top: 10, left: 10, bgcolor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, fontSize: '0.6rem', height: 22, borderRadius: '6px' }} />
         )}
       </Box>
 
-      {/* Content */}
       <Box sx={{ p: 2.5 }}>
-        <Typography
-          variant="subtitle2"
-          fontWeight={700}
-          sx={{
-            color: '#e0e0ef',
-            lineHeight: 1.4,
-            mb: 0.75,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
+        {/* Title */}
+        <Typography variant="subtitle2" fontWeight={700}
+          sx={{ color: '#e0e0ef', lineHeight: 1.4, mb: 0.75, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {service.title}
         </Typography>
 
-        <Typography
-          variant="caption"
-          sx={{
-            color: '#5c5c72',
-            lineHeight: 1.5,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            mb: 1.5,
-          }}
-        >
-          {service.description}
-        </Typography>
+        {/* Seller row with status */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <PersonIcon sx={{ fontSize: 13, color: '#5c5c72' }} />
+            <Typography variant="caption" sx={{ color: '#8b8b9e', fontWeight: 500 }}>{service.sellerName || 'Seller'}</Typography>
+          </Box>
+          <StatusBadge status={sellerStatus} showLabel={false} />
+          <UserLevelChip level={level} />
+        </Box>
 
-        {/* Rating stars (static) */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5 }}>
-          <Rating
-            value={4.5}
-            precision={0.5}
-            readOnly
-            size="small"
-            sx={{
-              '& .MuiRating-iconFilled': { color: '#f59e0b' },
-              '& .MuiRating-iconEmpty': { color: 'rgba(255,255,255,0.1)' },
-              fontSize: '0.9rem',
-            }}
-          />
+        {/* Stars */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
+          <Rating value={4.5} precision={0.5} readOnly size="small"
+            sx={{ '& .MuiRating-iconFilled': { color: '#f59e0b' }, '& .MuiRating-iconEmpty': { color: 'rgba(255,255,255,0.1)' }, fontSize: '0.8rem' }} />
           <Typography variant="caption" sx={{ color: '#5c5c72' }}>4.5</Typography>
         </Box>
 
-        {/* Tags */}
-        {service.tags?.length > 0 && (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.5 }}>
-            {service.tags.slice(0, 3).map((tag) => (
-              <Chip
-                key={tag}
-                label={tag}
-                size="small"
-                sx={{
-                  bgcolor: 'rgba(168, 85, 247, 0.08)',
-                  color: '#a78bfa',
-                  fontSize: '0.65rem',
-                  fontWeight: 500,
-                  height: 22,
-                  borderRadius: '6px',
-                  border: '1px solid rgba(168, 85, 247, 0.1)',
-                }}
-              />
-            ))}
-          </Box>
-        )}
+        {/* Badges */}
+        {badges.length > 0 && <Box sx={{ mb: 1 }}><UserBadges badges={badges} /></Box>}
 
-        {/* Footer */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            pt: 1.5,
-            borderTop: '1px solid rgba(255,255,255,0.05)',
-          }}
-        >
+        {/* Tags */}
+        {service.tags?.length > 0 && <Box sx={{ mb: 1.5 }}><TagGroup tags={service.tags} max={3} /></Box>}
+
+        {/* Audio preview */}
+        <Box sx={{ mb: 2 }}>
+          <AudioPlayer compact seed={service.title || 'audio'} duration={service.deliveryTime ? service.deliveryTime * 40 : 180} accent="#a855f7" />
+        </Box>
+
+        {/* Package selector */}
+        <Box sx={{ display: 'flex', gap: 0.5, mb: 2 }}>
+          {PACKAGES.map((pkg, i) => (
+            <Box key={pkg} onClick={() => setSelectedPkg(i)}
+              sx={{
+                flex: 1, textAlign: 'center', py: 0.6, borderRadius: '8px', cursor: 'pointer',
+                bgcolor: selectedPkg === i ? `${PKG_COLORS[i]}15` : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${selectedPkg === i ? `${PKG_COLORS[i]}40` : 'rgba(255,255,255,0.04)'}`,
+                transition: 'all 0.2s', '&:hover': { borderColor: `${PKG_COLORS[i]}30` },
+              }}>
+              <Typography variant="caption" sx={{ color: selectedPkg === i ? PKG_COLORS[i] : '#5c5c72', fontWeight: selectedPkg === i ? 700 : 400, fontSize: '0.58rem' }}>{pkg}</Typography>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Price + Delivery */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#10b981' }}>${pkgPrice}</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <PersonIcon sx={{ fontSize: 14, color: '#5c5c72' }} />
-            <Typography variant="caption" sx={{ color: '#8b8b9e', fontWeight: 500 }}>
-              {service.sellerName || 'Seller'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <AccessTimeIcon sx={{ fontSize: 14, color: '#5c5c72' }} />
-            <Typography variant="caption" sx={{ color: '#8b8b9e' }}>
-              {service.deliveryTime || '?'}d
-            </Typography>
+            <AccessTimeIcon sx={{ fontSize: 13, color: '#5c5c72' }} />
+            <Typography variant="caption" sx={{ color: '#8b8b9e' }}>{pkgDelivery}d delivery</Typography>
           </Box>
         </Box>
+
+        {/* Order button */}
+        <Button fullWidth startIcon={<ShoppingCartIcon sx={{ fontSize: 16 }} />}
+          onClick={(e) => { e.stopPropagation(); onOrder?.(service, PACKAGES[selectedPkg], pkgPrice); }}
+          sx={{
+            borderRadius: '10px', textTransform: 'none', fontWeight: 700, py: 1,
+            background: 'linear-gradient(135deg, #a855f7, #6366f1)', color: 'white', fontSize: '0.8rem',
+            '&:hover': { boxShadow: '0 0 25px rgba(168,85,247,0.25)' },
+          }}>
+          Order Now
+        </Button>
       </Box>
     </Box>
   );

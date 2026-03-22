@@ -4,6 +4,7 @@ import { Typography, Box, TextField, InputAdornment, Button, Chip } from '@mui/m
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import { serviceService } from '../services';
+import { showSuccess } from '../utils';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import HeadphonesIcon from '@mui/icons-material/Headphones';
 import MicIcon from '@mui/icons-material/Mic';
@@ -240,7 +241,7 @@ const ServiceMarketplace = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {displayServices.map((service) => (
-              <ServiceCard key={service.id} service={service} />
+              <ServiceCard key={service.id} service={service} onOrder={(svc, pkg, price) => showSuccess(`🎉 Order placed! ${svc.title} (${pkg}) — $${price}`)} />
             ))}
           </div>
         )}

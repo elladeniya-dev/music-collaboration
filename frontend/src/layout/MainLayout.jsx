@@ -18,6 +18,9 @@ const MainLayout = () => {
   const toggleSidebar = () => setIsCollapsed(prev => !prev);
   const isChatPage = location.pathname.startsWith('/chat');
   const isMarketplace = location.pathname === '/services';
+  const isJobBoard = location.pathname === '/job';
+  const isCollab = location.pathname === '/requests';
+  const isHeroPage = isMarketplace || isJobBoard || isCollab;
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -50,7 +53,7 @@ const MainLayout = () => {
 
       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Top Navbar */}
-        {!isMarketplace && (
+        {!isHeroPage && (
           <Box
             component="header"
             sx={{
@@ -98,9 +101,9 @@ const MainLayout = () => {
         <Box
           component="main"
           sx={{
-            p: isChatPage ? 0 : isMarketplace ? 0 : { xs: 2, md: 3 },
-            px: isChatPage ? 0 : isMarketplace ? 0 : { xs: 2, md: 4 },
-            maxWidth: isChatPage || isMarketplace ? '100%' : '1400px',
+            p: isChatPage || isHeroPage ? 0 : { xs: 2, md: 3 },
+            px: isChatPage || isHeroPage ? 0 : { xs: 2, md: 4 },
+            maxWidth: isChatPage || isHeroPage ? '100%' : '1400px',
             width: '100%',
             flexGrow: 1,
             overflow: 'hidden',

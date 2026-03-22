@@ -8,12 +8,13 @@ import {
   Chip,
   InputAdornment,
 } from '@mui/material';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import FileUploadZone from '../components/FileUploadZone';
 import { serviceService } from '../services';
 import { showSuccess, showError } from '../utils';
 
@@ -252,41 +253,13 @@ const CreateServiceForm = () => {
             <Typography variant="body2" sx={{ color: '#5c5c72', mb: 4 }}>
               Upload samples, portfolio work, or images to showcase your service.
             </Typography>
-
-            {/* Drag & Drop Zone */}
-            <Box
-              onDrop={handleFileDrop}
-              onDragOver={(e) => e.preventDefault()}
-              sx={{
-                border: '2px dashed rgba(168,85,247,0.2)',
-                borderRadius: '16px',
-                p: 6,
-                textAlign: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                '&:hover': { borderColor: 'rgba(168,85,247,0.4)', bgcolor: 'rgba(168,85,247,0.03)' },
-              }}
-              onClick={() => document.getElementById('media-upload-input').click()}
-            >
-              <CloudUploadIcon sx={{ fontSize: 48, color: '#5c5c72', mb: 2 }} />
-              <Typography sx={{ color: '#8b8b9e', mb: 0.5 }}>
-                Drag & drop files here, or <span style={{ color: '#a855f7', fontWeight: 600 }}>browse</span>
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#4a4a5e' }}>
-                PNG, JPG, MP3, WAV up to 10MB
-              </Typography>
-              <input id="media-upload-input" type="file" multiple hidden onChange={handleFileDrop} accept="image/*,audio/*" />
-            </Box>
-
-            {formData.mediaFiles.length > 0 && (
-              <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {formData.mediaFiles.map((f, i) => (
-                  <Chip key={i} label={f.name} size="small" onDelete={() => setFormData(prev => ({ ...prev, mediaFiles: prev.mediaFiles.filter((_, j) => j !== i) }))}
-                    sx={{ bgcolor: 'rgba(255,255,255,0.04)', color: '#8b8b9e', borderRadius: '8px', '& .MuiChip-deleteIcon': { color: '#5c5c72' } }}
-                  />
-                ))}
-              </Box>
-            )}
+            <FileUploadZone
+              files={formData.mediaFiles}
+              onChange={(files) => setFormData(prev => ({ ...prev, mediaFiles: files }))}
+              accept="image/*,audio/*"
+              maxFiles={5}
+              accent="#a855f7"
+            />
           </Box>
         )}
 
