@@ -30,9 +30,10 @@ public class DashboardService {
     private final OrderMapper orderMapper;
     private final ReviewMapper reviewMapper;
 
-    public DashboardResponse getDashboardData(String sellerId) {
+    public DashboardResponse getDashboardData(String userId) {
         
-        List<Order> allSellerOrders = orderRepository.findBySellerId(sellerId);
+        // --- SELLER STATS ---
+        List<Order> allSellerOrders = orderRepository.findBySellerId(userId);
         
         int totalOrders = allSellerOrders.size();
         
@@ -47,13 +48,12 @@ public class DashboardService {
         int completedOrdersCount = completedOrdersList.size();
         
         double totalEarnings = completedOrdersList.stream()
-                .filter(order -> order.getStatus() == OrderStatus.COMPLETED)
                 .mapToDouble(Order::getPrice)
                 .sum();
                 
-        User seller = userRepository.findById(sellerId).orElse(null);
-        double averageRating = seller != null ? seller.getAverageRating() : 0.0;
-        int totalReviews = seller != null ? seller.getTotalReviews() : 0;
+        User user = userRepository.findById(userId).orElse(null);
+        double averageRating = user != null ? user.getAverageRating() : 0.0;
+        int totalReviews = user != null ? user.getTotalReviews() : 0;
         
         List<OrderResponse> recentOrders = allSellerOrders.stream()
                 .sorted(Comparator.comparing(Order::getCreatedAt,
@@ -62,7 +62,7 @@ public class DashboardService {
                 .map(orderMapper::toResponse)
                 .collect(Collectors.toList());
                 
-        List<Review> allReviews = reviewRepository.findBySellerId(sellerId);
+        List<Review> allReviews = reviewRepository.findBySellerId(userId);
         List<ReviewResponse> recentReviews = allReviews.stream()
                 .sorted(Comparator.comparing(Review::getCreatedAt,
                         Comparator.nullsLast(Comparator.naturalOrder())).reversed())
@@ -70,14 +70,48 @@ public class DashboardService {
                 .map(reviewMapper::toResponse)
                 .collect(Collectors.toList());
 
+        // --- BUYER STATS ---
+        List<Order> allBuyerOrders = orderRepository.findByBuyerId(userId);
+        
+        int totalOrdersAsBuyer = allBuyerOrders.size();
+        
+        long activeOrdersAsBuyer = allBuyerOrders.stream()
+                .filter(order -> Arrays.asList(OrderStatus.PENDING, OrderStatus.IN_PROGRESS).contains(order.getStatus()))
+                .count();
+
+        List<Order> completedBuyerOrdersList = allBuyerOrders.stream()
+                .filter(order -> order.getStatus() == OrderStatus.COMPLETED)
+                .collect(Collectors.toList());
+                
+        int completedOrdersAsBuyerCount = completedBuyerOrdersList.size();
+        
+        double totalSpent = completedBuyerOrdersList.stream()
+                .mapToDouble(Order::getPrice)
+                .sum();
+                
+        List<OrderResponse> recentOrdersAsBuyer = allBuyerOrders.stream()
+                .sorted(Comparator.comparing(Order::getCreatedAt,
+                        Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .limit(5)
+                .map(orderMapper::toResponse)
+                .collect(Collectors.toList());
+
         return DashboardResponse.builder()
                 .totalOrders(totalOrders)
                 .completedOrders(completedOrdersCount)
                 .activeOrders((int) activeOrders)
                 .totalEarnings(totalEarnings)
+                
+                .totalOrdersAsBuyer(totalOrdersAsBuyer)
+                .completedOrdersAsBuyer(completedOrdersAsBuyerCount)
+                .activeOrdersAsBuyer((int) activeOrdersAsBuyer)
+                .totalSpent(totalSpent)
+
                 .averageRating(averageRating)
                 .totalReviews(totalReviews)
+                
                 .recentOrders(recentOrders)
+                .recentOrdersAsBuyer(recentOrdersAsBuyer)
                 .recentReviews(recentReviews)
                 .build();
     }

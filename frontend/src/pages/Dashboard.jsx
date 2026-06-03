@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, Skeleton, Typography } from '@mui/material';
+import { Alert, Box, Skeleton, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import StarRateIcon from '@mui/icons-material/StarRate';
@@ -44,12 +44,14 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('seller');
 
   useEffect(() => {
     let isMounted = true;
+    let interval = null;
 
-    const fetchDashboard = async () => {
-      setLoading(true);
+    const fetchDashboard = async (showLoading = true) => {
+      if (showLoading) setLoading(true);
       setError(null);
 
       try {
@@ -58,24 +60,27 @@ const Dashboard = () => {
           setData(result);
         }
       } catch {
-        if (isMounted) {
+        if (isMounted && showLoading) {
           setError('Failed to load dashboard data. Please refresh and try again.');
         }
       } finally {
-        if (isMounted) {
+        if (isMounted && showLoading) {
           setLoading(false);
         }
       }
     };
 
     if (user) {
-      fetchDashboard();
+      fetchDashboard(true);
+      // Poll every 15 seconds for real-time updates
+      interval = setInterval(() => fetchDashboard(false), 15000);
     } else {
       setLoading(false);
     }
 
     return () => {
       isMounted = false;
+      if (interval) clearInterval(interval);
     };
   }, [user]);
 
@@ -84,50 +89,84 @@ const Dashboard = () => {
       return [];
     }
 
-    return [
-      {
-        label: 'Total Earnings',
-        value: formatCurrency(data.totalEarnings),
-        helperText: `${data.completedOrders || 0} completed payouts`,
-        icon: <AttachMoneyIcon sx={{ fontSize: 20 }} />,
-        color: '#10b981',
-      },
-      {
-        label: 'Completed Orders',
-        value: `${data.completedOrders || 0}`,
-        helperText: `${data.totalOrders || 0} total orders`,
-        icon: <TaskAltIcon sx={{ fontSize: 20 }} />,
-        color: '#6366f1',
-      },
-      {
-        label: 'Active Orders',
-        value: `${data.activeOrders || 0}`,
-        helperText: 'Pending + In progress',
-        icon: <PendingActionsIcon sx={{ fontSize: 20 }} />,
-        color: '#06b6d4',
-      },
-      {
-        label: 'Average Rating',
-        value: `${(data.averageRating || 0).toFixed(1)}`,
-        helperText: `${data.totalReviews || 0} reviews received`,
-        icon: <StarRateIcon sx={{ fontSize: 20 }} />,
-        color: '#f59e0b',
-      },
-    ];
-  }, [data]);
+    if (viewMode === 'seller') {
+      return [
+        {
+          label: 'Total Earnings',
+          value: formatCurrency(data.totalEarnings),
+          helperText: `${data.completedOrders || 0} completed payouts`,
+          icon: <AttachMoneyIcon sx={{ fontSize: 20 }} />,
+          color: '#10b981',
+        },
+        {
+          label: 'Completed Orders',
+          value: `${data.completedOrders || 0}`,
+          helperText: `${data.totalOrders || 0} total orders`,
+          icon: <TaskAltIcon sx={{ fontSize: 20 }} />,
+          color: '#6366f1',
+        },
+        {
+          label: 'Active Orders',
+          value: `${data.activeOrders || 0}`,
+          helperText: 'Pending + In progress',
+          icon: <PendingActionsIcon sx={{ fontSize: 20 }} />,
+          color: '#06b6d4',
+        },
+        {
+          label: 'Average Rating',
+          value: `${(data.averageRating || 0).toFixed(1)}`,
+          helperText: `${data.totalReviews || 0} reviews received`,
+          icon: <StarRateIcon sx={{ fontSize: 20 }} />,
+          color: '#f59e0b',
+        },
+      ];
+    } else {
+      return [
+        {
+          label: 'Total Spent',
+          value: formatCurrency(data.totalSpent),
+          helperText: `${data.completedOrdersAsBuyer || 0} completed purchases`,
+          icon: <AttachMoneyIcon sx={{ fontSize: 20 }} />,
+          color: '#ef4444',
+        },
+        {
+          label: 'Purchased Orders',
+          value: `${data.completedOrdersAsBuyer || 0}`,
+          helperText: `${data.totalOrdersAsBuyer || 0} total orders`,
+          icon: <TaskAltIcon sx={{ fontSize: 20 }} />,
+          color: '#8b5cf6',
+        },
+        {
+          label: 'Active Purchases',
+          value: `${data.activeOrdersAsBuyer || 0}`,
+          helperText: 'Pending + In progress',
+          icon: <PendingActionsIcon sx={{ fontSize: 20 }} />,
+          color: '#0ea5e9',
+        },
+        {
+          label: 'Average Rating',
+          value: `${(data.averageRating || 0).toFixed(1)}`,
+          helperText: `${data.totalReviews || 0} reviews received`,
+          icon: <StarRateIcon sx={{ fontSize: 20 }} />,
+          color: '#f59e0b',
+        },
+      ];
+    }
+  }, [data, viewMode]);
 
   const recentOrders = useMemo(() => {
-    if (!data?.recentOrders) {
+    const ordersList = viewMode === 'seller' ? data?.recentOrders : data?.recentOrdersAsBuyer;
+    if (!ordersList) {
       return [];
     }
 
-    return data.recentOrders.map((order) => ({
+    return ordersList.map((order) => ({
       id: `order-${order.id}`,
       primary: order.serviceTitle || `Order ${order.id?.slice(0, 6) || ''}`,
       secondary: `${order.status} - ${formatCurrency(order.price)}`,
       time: formatTimeAgo(order.createdAt),
     }));
-  }, [data]);
+  }, [data, viewMode]);
 
   const recentReviews = useMemo(() => {
     if (!data?.recentReviews) {
@@ -141,7 +180,6 @@ const Dashboard = () => {
       time: formatTimeAgo(review.createdAt),
     }));
   }, [data]);
-
 
   const renderLoadingState = () => (
     <>
@@ -173,7 +211,7 @@ const Dashboard = () => {
     <Box sx={{ maxWidth: 1240, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }} className="fade-in">
       <PageHeader
         title="Analytics Dashboard"
-        subtitle={user?.name ? `Welcome back, ${user.name}. Real-time insight into your earnings and fulfillment.` : 'Real-time insight into your earnings and fulfillment.'}
+        subtitle={user?.name ? `Welcome back, ${user.name}. Real-time insight into your activities.` : 'Real-time insight into your activities.'}
       />
 
       <Box
@@ -184,14 +222,49 @@ const Dashboard = () => {
           border: '1px solid rgba(255,255,255,0.08)',
           background:
             'radial-gradient(circle at top right, rgba(16,185,129,0.22), transparent 42%), radial-gradient(circle at bottom left, rgba(99,102,241,0.2), transparent 38%), #16161f',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 2
         }}
       >
-        <Typography variant="h5" fontWeight={800} sx={{ color: '#f0f0fb', letterSpacing: '-0.4px' }}>
-          Snapshot
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#afafc4', mt: 0.5 }}>
-          Track revenue, fulfillment, and service quality in real time.
-        </Typography>
+        <Box>
+          <Typography variant="h5" fontWeight={800} sx={{ color: '#f0f0fb', letterSpacing: '-0.4px' }}>
+            Snapshot
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#afafc4', mt: 0.5 }}>
+            Track your platform interactions and statistics in real time.
+          </Typography>
+        </Box>
+        
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={(e, newMode) => newMode && setViewMode(newMode)}
+          size="small"
+          sx={{
+            bgcolor: 'rgba(0,0,0,0.2)',
+            p: 0.5,
+            borderRadius: 2,
+            '& .MuiToggleButton-root': {
+              color: '#a1a1aa',
+              border: 'none',
+              borderRadius: 1.5,
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              '&.Mui-selected': {
+                bgcolor: '#a855f7',
+                color: '#fff',
+                '&:hover': { bgcolor: '#9333ea' }
+              }
+            }
+          }}
+        >
+          <ToggleButton value="seller">Seller</ToggleButton>
+          <ToggleButton value="buyer">Buyer</ToggleButton>
+        </ToggleButtonGroup>
       </Box>
 
       {error ? (
@@ -219,9 +292,9 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <ActivityCard
-              title="Recent Orders"
+              title={viewMode === 'seller' ? 'Recent Selling Orders' : 'Recent Purchases'}
               items={recentOrders}
-              emptyText="No order activity yet. New orders will appear here."
+              emptyText={`No ${viewMode === 'seller' ? 'selling' : 'purchasing'} activity yet.`}
             />
 
             <ActivityCard

@@ -16,9 +16,17 @@ public class DashboardResponse {
     private int completedOrders;
     private int activeOrders;
     private double totalEarnings;
+    
+    // Buyer Stats
+    private int totalOrdersAsBuyer;
+    private int completedOrdersAsBuyer;
+    private int activeOrdersAsBuyer;
+    private double totalSpent;
+
     private double averageRating;
     private int totalReviews;
     
     private List<OrderResponse> recentOrders;
+    private List<OrderResponse> recentOrdersAsBuyer;
     private List<ReviewResponse> recentReviews;
 }
