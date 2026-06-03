@@ -7,6 +7,7 @@ import com.harmonix.exception.UnauthorizedException;
 import com.harmonix.mapper.NotificationMapper;
 import com.harmonix.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -19,6 +20,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public void createNotification(String userId, NotificationType type, String message, String referenceId) {
         Notification notification = Notification.builder()
@@ -30,7 +32,16 @@ public class NotificationService {
                 .createdAt(new Date())
                 .build();
         
-        notificationRepository.save(notification);
+        Notification savedNotification = notificationRepository.save(notification);
+        
+        // Broadcast notification to user
+        try {
+            NotificationResponse response = notificationMapper.toResponse(savedNotification);
+            messagingTemplate.convertAndSend("/queue/notifications/" + userId, response);
+        } catch (Exception e) {
+            // Log but don't fail the transaction if WebSocket broadcast fails
+            System.err.println("Error broadcasting notification: " + e.getMessage());
+        }
     }
 
     public List<NotificationResponse> getUserNotifications(String userId) {

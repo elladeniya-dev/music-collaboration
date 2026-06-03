@@ -9,8 +9,10 @@ import websocketService from '../services/websocketService';
  * @param {string} userId - Current user ID
  * @param {function} onMessageReceived - Callback when message is received
  * @param {boolean} enabled - Whether to enable WebSocket connection
+ * @param {function} onTypingReceived - Callback for typing events
+ * @param {function} onPresenceReceived - Callback for presence events
  */
-export const useWebSocket = (chatId, userId, onMessageReceived, enabled = true) => {
+export const useWebSocket = (chatId, userId, onMessageReceived, enabled = true, onTypingReceived = null, onPresenceReceived = null) => {
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState(null);
   const subscriptionRef = useRef(null);
@@ -22,9 +24,11 @@ export const useWebSocket = (chatId, userId, onMessageReceived, enabled = true) 
       setConnected(true);
       setError(null);
     }
+    
+    console.log('[useWebSocket] Connecting with userId:', userId);
 
     // Connect to WebSocket
-    websocketService.connect(
+    websocketService.connect(userId,
       () => {
         setConnected(true);
         setError(null);
@@ -53,13 +57,31 @@ export const useWebSocket = (chatId, userId, onMessageReceived, enabled = true) 
       onMessageReceived(message);
     });
 
+    let typingSub = null;
+    if (onTypingReceived) {
+      typingSub = websocketService.subscribeToTyping(chatId, onTypingReceived);
+    }
+
+    let presenceSub = null;
+    if (onPresenceReceived) {
+      presenceSub = websocketService.subscribeToPresence(onPresenceReceived);
+      websocketService.sendPresenceIndicator({ userId, online: true });
+    }
+
     return () => {
       if (subscriptionRef.current) {
         websocketService.unsubscribe(subscriptionRef.current);
         subscriptionRef.current = null;
       }
+      if (typingSub) {
+        websocketService.unsubscribe(typingSub);
+      }
+      if (presenceSub) {
+        websocketService.sendPresenceIndicator({ userId, online: false });
+        websocketService.unsubscribe(presenceSub);
+      }
     };
-  }, [connected, chatId, onMessageReceived]);
+  }, [connected, chatId, onMessageReceived, onTypingReceived, onPresenceReceived, userId]);
 
   /**
    * Send a message through WebSocket
@@ -84,7 +106,7 @@ export const useWebSocket = (chatId, userId, onMessageReceived, enabled = true) 
         chatId,
         userId,
         userName,
-        isTyping,
+        typing: isTyping,
       });
     } catch (error) {
       console.error('Failed to send typing indicator:', error);

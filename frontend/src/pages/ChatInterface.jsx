@@ -101,6 +101,7 @@ const ChatInterface = () => {
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
+  const [partnerOnline, setPartnerOnline] = useState(false);
   const [draftFiles, setDraftFiles] = useState([]);
   const [isDragActive, setIsDragActive] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -119,9 +120,34 @@ const ChatInterface = () => {
     scrollToBottom();
   }, []);
 
-  const { connected, sendMessage: sendWsMessage, sendTypingIndicator } = useWebSocket(
-    partnerId ? getChatId() : null, getUserId(user), handleMessageReceived, !!partnerId && !!user
+  const handleTypingReceived = useCallback((indicator) => {
+    if (indicator.userId === partnerId) {
+      // Jackson serializes boolean isTyping to 'typing'
+      setPartnerTyping(indicator.typing !== undefined ? indicator.typing : indicator.isTyping);
+    }
+  }, [partnerId]);
+
+  const handlePresenceReceived = useCallback((presence) => {
+    if (presence.userId === partnerId) {
+      setPartnerOnline(presence.online);
+    }
+  }, [partnerId]);
+
+  const { sendMessage, sendTypingIndicator, connected } = useWebSocket(
+    partnerId ? getChatId() : null, 
+    getUserId(user), 
+    handleMessageReceived, 
+    !!partnerId && !!user, 
+    handleTypingReceived, 
+    handlePresenceReceived
   );
+
+  // Check partner's presence immediately when chat opens and socket connects
+  useEffect(() => {
+    if (connected && partnerId) {
+      websocketService.checkPresence(partnerId);
+    }
+  }, [connected, partnerId]);
 
   const scrollToBottom = () => setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
 
@@ -467,12 +493,12 @@ const ChatInterface = () => {
             </div>
           ) : <h2 className="text-sm font-medium" style={{ color: '#5c5c72' }}>Select a conversation</h2>}
           {partnerId && (
-            <Chip label={connected ? 'Live' : 'Offline'} size="small"
+            <Chip label={partnerOnline ? 'Online' : 'Offline'} size="small"
               sx={{
-                bgcolor: connected ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                color: connected ? '#10b981' : '#ef4444',
+                bgcolor: partnerOnline ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                color: partnerOnline ? '#10b981' : '#ef4444',
                 fontWeight: 600, fontSize: '0.65rem', height: 22,
-                border: '1px solid', borderColor: connected ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+                border: '1px solid', borderColor: partnerOnline ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
               }} />
           )}
         </header>

@@ -5,6 +5,8 @@ import { Notifications, Search as SearchIcon, ShoppingCart, Message, Star } from
 import Sidebar from '../components/Sidebar';
 import { useUser } from '../context/UserContext';
 import { notificationService } from '../services';
+import websocketService from '../services/websocketService';
+import { getUserId } from '../utils';
 
 const formatTimeAgo = (dateString) => {
   if (!dateString) return '';
@@ -47,8 +49,31 @@ const MainLayout = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 15000);
-    return () => clearInterval(interval);
+    const userId = getUserId(user);
+    if (!userId) return;
+
+    // Connect to WebSocket using the user's ID
+    let notifSub = null;
+    websocketService.connect(userId, () => {
+      setWsConnected(true);
+      notifSub = websocketService.subscribeToNotifications(userId, (newNotif) => {
+        setNotifications((prev) => {
+          if (prev.some((n) => n.id === newNotif.id)) return prev;
+          return [newNotif, ...prev];
+        });
+        setUnreadCount((prev) => prev + 1);
+      });
+      // Subscribe to global presence to send presence broadcast
+      websocketService.subscribeToPresence(() => {});
+      websocketService.sendPresenceIndicator({ userId, online: true });
+    });
+
+    // Fallback polling for reliability
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => {
+      clearInterval(interval);
+      if (notifSub) websocketService.unsubscribe(notifSub);
+    };
   }, [user]);
 
   const handleNotificationClick = (event) => {

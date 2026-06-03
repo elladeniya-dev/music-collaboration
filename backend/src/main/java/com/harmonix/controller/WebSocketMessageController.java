@@ -69,6 +69,8 @@ public class WebSocketMessageController {
      */
     @MessageMapping("/typing")
     public void handleTyping(@Payload TypingIndicator indicator) {
+        log.info("Typing indicator - ChatId: {}, UserId: {}, isTyping: {}", 
+                indicator.getChatId(), indicator.getUserId(), indicator.isTyping());
         messagingTemplate.convertAndSend(
                 "/topic/chat/" + indicator.getChatId() + "/typing", 
                 indicator
@@ -95,6 +97,23 @@ public class WebSocketMessageController {
         }
     }
 
+    /**
+     * Handle presence (online/offline) indicator
+     */
+    @MessageMapping("/presence")
+    public void handlePresence(@Payload PresenceIndicator indicator) {
+        log.info("Presence update - UserId: {}, online: {}", 
+                indicator.getUserId(), indicator.isOnline());
+        messagingTemplate.convertAndSend("/topic/presence", indicator);
+    }
+
+    @MessageMapping("/presence/check")
+    public void checkPresence(@Payload String targetUserId) {
+        boolean isOnline = com.harmonix.config.WebSocketEventListener.isUserOnline(targetUserId);
+        PresenceIndicator indicator = new PresenceIndicator(targetUserId, isOnline);
+        messagingTemplate.convertAndSend("/topic/presence", indicator);
+    }
+
     // Inner classes for WebSocket payloads
     @lombok.Data
     @lombok.NoArgsConstructor
@@ -114,5 +133,13 @@ public class WebSocketMessageController {
         private String chatId;
         private String status; // "delivered", "read"
         private String userId;
+    }
+
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class PresenceIndicator {
+        private String userId;
+        private boolean online; // Matches JSON "online"
     }
 }

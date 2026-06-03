@@ -10,6 +10,7 @@ class WebSocketService {
     this.client = null;
     this.connected = false;
     this.subscriptions = new Map();
+    this.connectionCallbacks = [];
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.reconnectDelay = 3000;
@@ -17,13 +18,18 @@ class WebSocketService {
 
   /**
    * Connect to WebSocket server
+   * @param {string} userId - Current user ID to send in connect headers
+   * @param {function} onConnected - Callback when connection is established
+   * @param {function} onError - Callback when connection fails
    */
-  connect(onConnected, onError) {
+  connect(userId, onConnected, onError) {
     if (this.client?.connected || this.connected) {
       this.connected = true;
       if (onConnected) onConnected();
       return;
     }
+
+    if (onConnected) this.connectionCallbacks.push(onConnected);
 
     if (this.client?.active) {
       return;
@@ -32,10 +38,10 @@ class WebSocketService {
     const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
 
     this.client = new Client({
-      webSocketFactory: () => new SockJS(wsUrl),
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
       
       connectHeaders: {
-        // Add auth headers if needed
+        userId: (typeof userId === 'string') ? userId : ''
       },
 
       debug: (str) => {
@@ -52,7 +58,8 @@ class WebSocketService {
         console.log('✅ WebSocket Connected');
         this.connected = true;
         this.reconnectAttempts = 0;
-        if (onConnected) onConnected(frame);
+        this.connectionCallbacks.forEach(cb => cb(frame));
+        this.connectionCallbacks = [];
       },
 
       onStompError: (frame) => {
@@ -171,6 +178,72 @@ class WebSocketService {
   }
 
   /**
+   * Subscribe to live notifications
+   * @param {string} userId - User ID
+   * @param {function} callback - Callback for notifications
+   */
+  subscribeToNotifications(userId, callback) {
+    if (!this.client || !this.client.connected) return null;
+
+    const destination = `/queue/notifications/${userId}`;
+    const subscriptionId = `notifications-${userId}`;
+
+    if (this.subscriptions.has(subscriptionId)) {
+      this.unsubscribe(subscriptionId);
+    }
+
+    try {
+      const subscription = this.client.subscribe(destination, (message) => {
+        try {
+          const notifData = JSON.parse(message.body);
+          callback(notifData);
+        } catch (error) {
+          console.error('Error parsing notification:', error);
+        }
+      });
+
+      this.subscriptions.set(subscriptionId, subscription);
+      console.log(`🔔 Subscribed to live notifications for: ${userId}`);
+      return subscriptionId;
+    } catch (error) {
+      console.error('Error subscribing to notifications:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Subscribe to global presence indicator
+   * @param {function} callback - Callback for presence events
+   */
+  subscribeToPresence(callback) {
+    if (!this.client || !this.client.connected) return null;
+
+    const destination = `/topic/presence`;
+    const subscriptionId = `presence-global`;
+
+    if (this.subscriptions.has(subscriptionId)) {
+      this.unsubscribe(subscriptionId);
+    }
+
+    try {
+      const subscription = this.client.subscribe(destination, (message) => {
+        try {
+          const presenceData = JSON.parse(message.body);
+          callback(presenceData);
+        } catch (error) {
+          console.error('Error parsing presence indicator:', error);
+        }
+      });
+
+      this.subscriptions.set(subscriptionId, subscription);
+      return subscriptionId;
+    } catch (error) {
+      console.error('Error subscribing to presence:', error);
+      return null;
+    }
+  }
+
+  /**
    * Subscribe to typing indicators
    * @param {string} chatId - Chat ID
    * @param {function} callback - Callback for typing events
@@ -220,14 +293,40 @@ class WebSocketService {
   }
 
   /**
-   * Send typing indicator
-   * @param {object} indicator - Typing indicator object
+   * Send a typing indicator
+   * @param {Object} data - {chatId, userId, userName, typing}
    */
-  sendTypingIndicator(indicator) {
+  sendTypingIndicator(data) {
+    if (!this.connected || !this.client) return;
+
+    this.client.publish({
+      destination: '/app/message/typing',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Send a request to check presence of a specific user
+   * @param {string} targetUserId - User ID to check
+   */
+  checkPresence(targetUserId) {
+    if (!this.connected || !this.client) return;
+
+    this.client.publish({
+      destination: '/app/presence/check',
+      body: targetUserId,
+    });
+  }
+
+  /**
+   * Send presence indicator
+   * @param {object} indicator - Presence indicator object {userId, isOnline}
+   */
+  sendPresenceIndicator(indicator) {
     if (!this.client || !this.client.connected) return;
 
     this.client.publish({
-      destination: '/app/typing',
+      destination: '/app/presence',
       body: JSON.stringify(indicator),
     });
   }
