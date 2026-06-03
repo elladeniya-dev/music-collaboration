@@ -10,6 +10,11 @@ class ReviewService {
     const response = await axios.get(`/reviews/seller/${sellerId}`);
     return response.data.data;
   }
+
+  async addDirectReview(sellerId, rating, comment) {
+    const response = await axios.post('/reviews/direct', { sellerId, rating, comment });
+    return response.data.data;
+  }
 }
 
 export default new ReviewService();

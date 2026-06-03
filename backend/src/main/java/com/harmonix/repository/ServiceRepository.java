@@ -10,4 +10,5 @@ import java.util.List;
 public interface ServiceRepository extends MongoRepository<ServiceMarketplace, String> {
     List<ServiceMarketplace> findByCategory(String category);
     List<ServiceMarketplace> findBySellerId(String sellerId);
+    List<ServiceMarketplace> findByTitleContainingIgnoreCaseOrCategoryContainingIgnoreCase(String title, String category);
 }

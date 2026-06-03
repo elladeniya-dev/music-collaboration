@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Box, Typography, Avatar, IconButton, Tooltip, Badge, Popover, List, ListItem, ListItemText, ListItemAvatar, Divider } from '@mui/material';
-import { Notifications, Search as SearchIcon, ShoppingCart, Message, Star } from '@mui/icons-material';
+import { Box, Typography, Avatar, IconButton, Tooltip, Badge, Popover, List, ListItem, ListItemText, ListItemAvatar, Divider, Dialog, TextField, InputAdornment, CircularProgress, ListSubheader, ListItemButton } from '@mui/material';
+import { Notifications, Search as SearchIcon, ShoppingCart, Message, Star, Close as CloseIcon, Person, Work, LocalOffer } from '@mui/icons-material';
 import Sidebar from '../components/Sidebar';
 import { useUser } from '../context/UserContext';
-import { notificationService } from '../services';
+import { notificationService, globalSearchService } from '../services';
 import websocketService from '../services/websocketService';
 import { getUserId } from '../utils';
 
@@ -33,6 +33,12 @@ const MainLayout = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
+
+  // Global Search State
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState({ users: [], services: [], jobs: [] });
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (!loadingUser && !user) navigate('/');
@@ -99,6 +105,23 @@ const MainLayout = () => {
     if (notif.type === 'ORDER') navigate('/orders');
     else if (notif.type === 'MESSAGE') navigate('/chat');
     else if (notif.type === 'REVIEW') navigate('/profile');
+  };
+
+  const handleGlobalSearch = async (q) => {
+    setSearchQuery(q);
+    if (!q.trim()) {
+      setSearchResults({ users: [], services: [], jobs: [] });
+      return;
+    }
+    setSearching(true);
+    try {
+      const results = await globalSearchService.searchGlobal(q);
+      setSearchResults(results);
+    } catch (err) {
+      console.error('Global search failed', err);
+    } finally {
+      setSearching(false);
+    }
   };
 
   const toggleSidebar = () => setIsCollapsed(prev => !prev);
@@ -169,8 +192,8 @@ const MainLayout = () => {
             {getPageTitle()}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Tooltip title="Search">
-              <IconButton size="small" sx={{ color: '#5c5c72', '&:hover': { color: '#a855f7' } }}>
+            <Tooltip title="Global Search">
+              <IconButton size="small" onClick={() => { setSearchOpen(true); setSearchQuery(''); setSearchResults({ users: [], services: [], jobs: [] }); }} sx={{ color: '#5c5c72', '&:hover': { color: '#a855f7' } }}>
                 <SearchIcon />
               </IconButton>
             </Tooltip>
@@ -295,6 +318,119 @@ const MainLayout = () => {
           <Outlet />
         </Box>
       </Box>
+
+      {/* Global Search Dialog */}
+      <Dialog
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#111118',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '16px',
+            backgroundImage: 'none',
+            overflow: 'hidden'
+          },
+        }}
+      >
+        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <SearchIcon sx={{ color: '#8b8b9e', mr: 1.5 }} />
+          <input 
+            autoFocus
+            type="text"
+            placeholder="Search across platform (people, services, jobs)..."
+            value={searchQuery}
+            onChange={(e) => handleGlobalSearch(e.target.value)}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: '#fff',
+              fontSize: '1.1rem',
+            }}
+          />
+          {searching ? (
+            <CircularProgress size={20} sx={{ color: '#a855f7', ml: 1.5 }} />
+          ) : null}
+          <IconButton onClick={() => setSearchOpen(false)} sx={{ color: '#d4d4e7', ml: 1 }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <List sx={{ maxHeight: '60vh', overflowY: 'auto', p: 0 }}>
+          {!searchQuery.trim() ? (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ color: '#8b8b9e' }}>Type something to start searching...</Typography>
+            </Box>
+          ) : (!searching && searchResults.users.length === 0 && searchResults.services.length === 0 && searchResults.jobs.length === 0) ? (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ color: '#8b8b9e' }}>No results found for "{searchQuery}"</Typography>
+            </Box>
+          ) : (
+            <Box sx={{ p: 1 }}>
+              {searchResults.users.length > 0 && (
+                <>
+                  <ListSubheader sx={{ bgcolor: 'transparent', color: '#a855f7', fontWeight: 700, lineHeight: '36px' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Person sx={{ fontSize: 18 }} /> People
+                    </Box>
+                  </ListSubheader>
+                  {searchResults.users.map(u => (
+                    <ListItemButton key={u.id || u._id} onClick={() => { setSearchOpen(false); navigate(`/profile/${getUserId(u)}`); }} sx={{ borderRadius: '8px', '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' } }}>
+                      <ListItemAvatar>
+                        <Avatar src={u.profileImage} sx={{ bgcolor: '#8b5cf6', width: 32, height: 32, fontSize: '0.85rem' }}>{u.name?.charAt(0)}</Avatar>
+                      </ListItemAvatar>
+                      <ListItemText primary={u.name} secondary={u.role || 'Member'} primaryTypographyProps={{ sx: { color: '#e0e0ef', fontWeight: 600 } }} secondaryTypographyProps={{ sx: { color: '#8b8b9e' } }} />
+                    </ListItemButton>
+                  ))}
+                </>
+              )}
+
+              {searchResults.services.length > 0 && (
+                <>
+                  <ListSubheader sx={{ bgcolor: 'transparent', color: '#10b981', fontWeight: 700, lineHeight: '36px', mt: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LocalOffer sx={{ fontSize: 18 }} /> Services
+                    </Box>
+                  </ListSubheader>
+                  {searchResults.services.map(s => (
+                    <ListItemButton key={s.id} onClick={() => { setSearchOpen(false); navigate(`/services?q=${encodeURIComponent(s.title)}`); }} sx={{ borderRadius: '8px', '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' } }}>
+                      <ListItemAvatar>
+                        <Avatar variant="rounded" src={s.imageUrl} sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#10b981', width: 40, height: 40 }}>
+                          <LocalOffer sx={{ fontSize: 20 }} />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText primary={s.title} secondary={`By ${s.sellerName} • $${s.price.toFixed(2)}`} primaryTypographyProps={{ sx: { color: '#e0e0ef', fontWeight: 600 } }} secondaryTypographyProps={{ sx: { color: '#8b8b9e' } }} />
+                    </ListItemButton>
+                  ))}
+                </>
+              )}
+
+              {searchResults.jobs.length > 0 && (
+                <>
+                  <ListSubheader sx={{ bgcolor: 'transparent', color: '#3b82f6', fontWeight: 700, lineHeight: '36px', mt: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Work sx={{ fontSize: 18 }} /> Jobs & Projects
+                    </Box>
+                  </ListSubheader>
+                  {searchResults.jobs.map(j => (
+                    <ListItemButton key={j.id} onClick={() => { setSearchOpen(false); navigate(`/jobs/${j.id}`); }} sx={{ borderRadius: '8px', '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' } }}>
+                      <ListItemAvatar>
+                        <Avatar variant="rounded" sx={{ bgcolor: 'rgba(59,130,246,0.1)', color: '#3b82f6', width: 40, height: 40 }}>
+                          <Work sx={{ fontSize: 20 }} />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText primary={j.title} secondary={j.skillsNeeded} primaryTypographyProps={{ sx: { color: '#e0e0ef', fontWeight: 600 } }} secondaryTypographyProps={{ sx: { color: '#8b8b9e' } }} />
+                    </ListItemButton>
+                  ))}
+                </>
+              )}
+            </Box>
+          )}
+        </List>
+      </Dialog>
     </Box>
   );
 };

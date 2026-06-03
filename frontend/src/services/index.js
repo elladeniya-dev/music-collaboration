@@ -11,3 +11,4 @@ export { default as reviewService } from './reviewService';
 
 export { default as notificationService } from './notificationService';
 export { default as dashboardService } from './dashboardService';
+export { default as globalSearchService } from './globalSearchService';

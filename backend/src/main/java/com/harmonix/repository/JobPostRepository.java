@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface JobPostRepository extends MongoRepository<JobPost, String> {
     List<JobPost> findByUserId(String userId);
+    List<JobPost> findByTitleContainingIgnoreCaseOrSkillsNeededContainingIgnoreCase(String title, String skills);
 }

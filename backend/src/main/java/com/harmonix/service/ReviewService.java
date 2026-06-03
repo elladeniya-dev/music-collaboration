@@ -1,6 +1,7 @@
 package com.harmonix.service;
 
 import com.harmonix.dto.request.ReviewCreateRequest;
+import com.harmonix.dto.request.DirectReviewRequest;
 import com.harmonix.dto.response.ReviewResponse;
 import com.harmonix.entity.Order;
 import com.harmonix.entity.OrderStatus;
@@ -15,7 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -61,6 +64,48 @@ public class ReviewService {
             NotificationType.REVIEW,
             reviewerName + " left a " + request.getRating() + "-star review on your order",
             order.getId()
+        );
+
+        return reviewMapper.toResponse(savedReview);
+    }
+
+    public ReviewResponse addDirectReview(String reviewerId, String reviewerName, DirectReviewRequest request) {
+        if (reviewerId.equals(request.getSellerId())) {
+            throw new RuntimeException("You cannot rate yourself");
+        }
+
+        // Check for existing direct review
+        Optional<Review> existingReviewOpt = reviewRepository.findByReviewerIdAndSellerIdAndOrderId(
+            reviewerId, request.getSellerId(), "direct"
+        );
+
+        Review review;
+        if (existingReviewOpt.isPresent()) {
+            // Update existing
+            review = existingReviewOpt.get();
+            review.setRating(request.getRating());
+            review.setComment(request.getComment());
+        } else {
+            // Create new
+            review = Review.builder()
+                    .orderId("direct")
+                    .rating(request.getRating())
+                    .comment(request.getComment())
+                    .reviewerId(reviewerId)
+                    .reviewerName(reviewerName)
+                    .sellerId(request.getSellerId())
+                    .createdAt(new Date())
+                    .build();
+        }
+
+        Review savedReview = reviewRepository.save(review);
+        updateSellerRating(request.getSellerId());
+
+        notificationService.createNotification(
+            request.getSellerId(),
+            NotificationType.REVIEW,
+            reviewerName + " left a " + request.getRating() + "-star direct rating on your profile",
+            savedReview.getId()
         );
 
         return reviewMapper.toResponse(savedReview);

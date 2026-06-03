@@ -26,6 +26,13 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 
+    public java.util.List<User> searchUsersByName(String nameQuery) {
+        if (nameQuery == null || nameQuery.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return userRepository.findByNameContainingIgnoreCase(nameQuery.trim());
+    }
+
     public User getCurrentUserProfile(HttpServletRequest request) {
         return AuthUtil.requireUser(request, userRepository);
     }

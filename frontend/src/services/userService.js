@@ -20,9 +20,18 @@ class UserService {
     }
   }
 
+  async searchUsers(query) {
+    try {
+      const response = await axiosInstance.get(`/users/search?q=${encodeURIComponent(query)}`);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getUserById(id) {
     try {
-      const response = await axiosInstance.get(`/users/${id}`);
+      const response = await axiosInstance.get(`/users/id/${id}`);
       return response.data.data;
     } catch (error) {
       throw error;

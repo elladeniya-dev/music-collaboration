@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Avatar, IconButton, Chip, Tooltip, Box, Typography, Dialog } from '@mui/material';
+import { Avatar, IconButton, Chip, Tooltip, Box, Typography, Dialog, TextField, List, ListItem, ListItemAvatar, ListItemText, CircularProgress, InputAdornment, ListItemButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import AddIcon from '@mui/icons-material/Add';
@@ -11,6 +11,7 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import ImageIcon from '@mui/icons-material/Image';
 import AudioFileIcon from '@mui/icons-material/AudioFile';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import SearchIcon from '@mui/icons-material/Search';
 import { useUser } from '../context/UserContext';
 import { chatService, userService } from '../services';
 import websocketService from '../services/websocketService';
@@ -111,6 +112,12 @@ const ChatInterface = () => {
   const fileInputRef = useRef(null);
   const persistedObjectUrlsRef = useRef(new Set());
   const getChatId = () => [getUserId(user), partnerId].sort().join('_');
+
+  // Search Dialog State
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
 
   const handleMessageReceived = useCallback((newMessage) => {
     setMessages((prev) => {
@@ -313,15 +320,37 @@ const ChatInterface = () => {
     typingTimeoutRef.current = setTimeout(() => { setIsTyping(false); sendTypingIndicator(false, user.name); }, 2000);
   };
 
-  const startNewChat = async () => {
-    const email = await showInputDialog('Start New Chat', 'Enter Gmail of the user', 'email', 'example@gmail.com');
-    if (email) {
-      try {
-        const receiver = await userService.getUserByEmail(email);
-        if (!receiver || !getUserId(receiver)) { showError('User not found'); return; }
-        await chatService.createChatHead(getUserId(receiver));
-        navigate(`/chat/${getUserId(receiver)}`);
-      } catch { showError('Error', 'Could not find user.'); }
+  const startNewChat = () => {
+    setSearchDialogOpen(true);
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  const handleSearchUsers = async (q) => {
+    setSearchQuery(q);
+    if (!q.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    try {
+      const results = await userService.searchUsers(q);
+      setSearchResults(results.filter(u => getUserId(u) !== getUserId(user)));
+    } catch (err) {
+      console.error('Failed to search users', err);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const selectUserToChat = async (selectedUser) => {
+    try {
+      setSearchDialogOpen(false);
+      const receiverId = getUserId(selectedUser);
+      await chatService.createChatHead(receiverId);
+      navigate(`/chat/${receiverId}`);
+    } catch {
+      showError('Error', 'Failed to start chat.');
     }
   };
 
@@ -703,6 +732,89 @@ const ChatInterface = () => {
         {previewImage?.url ? (
           <Box component="img" src={previewImage.url} alt={previewImage.name || 'Preview'} sx={{ width: '100%', maxHeight: '70vh', objectFit: 'contain', pb: 1.2, px: 1.2 }} />
         ) : null}
+      </Dialog>
+
+      <Dialog
+        open={searchDialogOpen}
+        onClose={() => setSearchDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#111118',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '14px',
+            backgroundImage: 'none',
+            p: 2
+          },
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Typography variant="h6" fontWeight={700} sx={{ color: '#fff' }}>Start New Chat</Typography>
+          <IconButton onClick={() => setSearchDialogOpen(false)} sx={{ color: '#d4d4e7' }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <TextField
+          fullWidth
+          placeholder="Search users by name..."
+          value={searchQuery}
+          onChange={(e) => handleSearchUsers(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: '#8b8b9e' }} />
+              </InputAdornment>
+            ),
+            endAdornment: searching ? (
+              <InputAdornment position="end">
+                <CircularProgress size={20} sx={{ color: '#a855f7' }} />
+              </InputAdornment>
+            ) : null
+          }}
+          sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              color: '#fff',
+              bgcolor: 'rgba(255,255,255,0.02)',
+              borderRadius: '12px',
+              '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+              '&:hover fieldset': { borderColor: 'rgba(168,85,247,0.3)' },
+              '&.Mui-focused fieldset': { borderColor: '#a855f7' },
+            },
+          }}
+        />
+        <List sx={{ maxHeight: 300, overflowY: 'auto' }}>
+          {searchResults.length === 0 && searchQuery.trim() && !searching ? (
+            <Typography variant="body2" sx={{ color: '#8b8b9e', textAlign: 'center', py: 3 }}>
+              No users found matching "{searchQuery}"
+            </Typography>
+          ) : (
+            searchResults.map(u => (
+              <ListItemButton
+                key={getUserId(u)}
+                onClick={() => selectUserToChat(u)}
+                sx={{
+                  borderRadius: '8px',
+                  mb: 0.5,
+                  '&:hover': { bgcolor: 'rgba(168,85,247,0.1)' }
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar src={u.profileImage} sx={{ bgcolor: '#a855f7' }}>
+                    {u.name?.charAt(0).toUpperCase()}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText 
+                  primary={u.name} 
+                  secondary={u.email}
+                  primaryTypographyProps={{ sx: { color: '#fff', fontWeight: 600 } }}
+                  secondaryTypographyProps={{ sx: { color: '#8b8b9e' } }}
+                />
+              </ListItemButton>
+            ))
+          )}
+        </List>
       </Dialog>
     </div>
   );

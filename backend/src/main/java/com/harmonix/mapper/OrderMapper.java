@@ -2,10 +2,15 @@ package com.harmonix.mapper;
 
 import com.harmonix.dto.response.OrderResponse;
 import com.harmonix.entity.Order;
+import com.harmonix.repository.ReviewRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class OrderMapper {
+    
+    private final ReviewRepository reviewRepository;
     
     public OrderResponse toResponse(Order order) {
         if (order == null) return null;
@@ -22,6 +27,7 @@ public class OrderMapper {
                 .deliveryFileUrl(order.getDeliveryFileUrl())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
+                .isReviewed(reviewRepository.existsByOrderId(order.getId()))
                 .build();
     }
 }

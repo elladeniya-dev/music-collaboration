@@ -25,4 +25,5 @@ public class OrderResponse {
     private String deliveryFileUrl;
     private Date createdAt;
     private Date updatedAt;
+    private boolean isReviewed;
 }

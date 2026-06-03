@@ -43,6 +43,7 @@ function App() {
 
             {/* Profile */}
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
             <Route path="/profile/edit" element={<EditProfile />} />
           </Route>
         </Routes>

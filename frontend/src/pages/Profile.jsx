@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Avatar, Button, Rating, Chip, CircularProgress } from '@mui/material';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Box, Typography, Avatar, Button, Rating, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 import MessageIcon from '@mui/icons-material/Message';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -9,7 +10,6 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import StarIcon from '@mui/icons-material/Star';
 import WorkIcon from '@mui/icons-material/Work';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import StatusBadge from '../components/StatusBadge';
 import { UserLevelChip, UserBadges, getMockUserMeta } from '../components/UserBadge';
@@ -17,13 +17,14 @@ import { TagGroup } from '../components/Tag';
 import PortfolioItem from '../components/PortfolioItem';
 import ReviewCard from '../components/ReviewCard';
 import ServiceCard from '../components/ServiceCard';
-import { showSuccess, showError } from '../utils';
+import { showSuccess, showError, getUserId } from '../utils';
 import { formatDate } from '../utils';
 import { userService, serviceService, orderService, reviewService } from '../services';
 import { EmptyState, PageHeader } from '../components/ui';
 
 const Profile = () => {
   const { user } = useUser();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [following, setFollowing] = useState(false);
   const [activeSection, setActiveSection] = useState('portfolio');
@@ -33,11 +34,16 @@ const Profile = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [directRating, setDirectRating] = useState(0);
+  const [directComment, setDirectComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const pData = await userService.getCurrentUser();
+        const pData = id ? await userService.getUserById(id) : await userService.getCurrentUser();
         setProfileData(pData);
         
         // fetch services
@@ -55,7 +61,7 @@ const Profile = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [id]);
 
   const handleOrderService = async (svc, pkg, price) => {
      try {
@@ -77,6 +83,39 @@ const Profile = () => {
     }
   };
 
+  const handleDirectReviewSubmit = async () => {
+    if (directRating === 0) {
+      showError("Please select a rating.");
+      return;
+    }
+    if (!directComment.trim()) {
+      showError("Please write a comment.");
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const newReview = await reviewService.addDirectReview(profileData.id, directRating, directComment);
+      showSuccess("Thank you! Your rating has been submitted.");
+      
+      // Update local reviews and recalculate average rating optimistically
+      setReviews(prev => [newReview, ...prev.filter(r => r.id !== newReview.id)]);
+      const allRatings = [...reviews.filter(r => r.id !== newReview.id), newReview].map(r => r.rating);
+      const newAvg = (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1);
+      
+      setProfileData(prev => ({
+        ...prev,
+        totalReviews: allRatings.length,
+        averageRating: parseFloat(newAvg)
+      }));
+      
+      setReviewDialogOpen(false);
+    } catch (err) {
+      showError(err.response?.data?.message || "Failed to submit rating.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   if (loading || !profileData) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
@@ -94,6 +133,7 @@ const Profile = () => {
   const genres = profileData.genres || [];
 
   const sections = ['portfolio', 'about', 'services', 'reviews'];
+  const isOwnProfile = !id || id === getUserId(user);
 
   return (
     <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 2, md: 1 }, pb: 6 }} className="fade-in">
@@ -141,14 +181,23 @@ const Profile = () => {
 
             {/* Actions */}
             <Box sx={{ display: 'flex', gap: 1.5, flexShrink: 0, flexWrap: 'wrap' }}>
-              <Button startIcon={<EditIcon sx={{ fontSize: 16 }} />} onClick={() => navigate('/profile/edit')}
-                sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 2.5, bgcolor: 'rgba(255,255,255,0.04)', color: '#8b8b9e', border: '1px solid rgba(255,255,255,0.06)', '&:hover': { borderColor: 'rgba(168,85,247,0.2)', color: '#a855f7' } }}>
-                Edit
-              </Button>
-              <Button startIcon={<MessageIcon sx={{ fontSize: 16 }} />} onClick={() => navigate('/chat')}
-                sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 2.5, bgcolor: 'rgba(168,85,247,0.08)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.15)', '&:hover': { bgcolor: 'rgba(168,85,247,0.12)' } }}>
-                Message
-              </Button>
+              {isOwnProfile ? (
+                <Button startIcon={<EditIcon sx={{ fontSize: 16 }} />} onClick={() => navigate('/profile/edit')}
+                  sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 2.5, bgcolor: 'rgba(255,255,255,0.04)', color: '#8b8b9e', border: '1px solid rgba(255,255,255,0.06)', '&:hover': { borderColor: 'rgba(168,85,247,0.2)', color: '#a855f7' } }}>
+                  Edit
+                </Button>
+              ) : (
+                <>
+                  <Button startIcon={<MessageIcon sx={{ fontSize: 16 }} />} onClick={() => navigate(`/chat/${id}`)}
+                    sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 2.5, bgcolor: 'rgba(168,85,247,0.08)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.15)', '&:hover': { bgcolor: 'rgba(168,85,247,0.12)' } }}>
+                    Message
+                  </Button>
+                  <Button startIcon={<StarIcon sx={{ fontSize: 16 }} />} onClick={() => { setDirectRating(0); setDirectComment(''); setReviewDialogOpen(true); }}
+                    sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, px: 2.5, bgcolor: 'rgba(245,158,11,0.08)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.15)', '&:hover': { bgcolor: 'rgba(245,158,11,0.12)' } }}>
+                    Rate
+                  </Button>
+                </>
+              )}
               <Button startIcon={<PersonAddIcon sx={{ fontSize: 16 }} />}
                 onClick={() => { setFollowing(!following); showSuccess(following ? 'Unfollowed' : 'Following!'); }}
                 sx={{
@@ -311,6 +360,65 @@ const Profile = () => {
           </div>
         </Box>
       )}
+      {/* ═══════════ DIRECT REVIEW DIALOG ═══════════ */}
+      <Dialog 
+        open={reviewDialogOpen} 
+        onClose={() => !submittingReview && setReviewDialogOpen(false)}
+        PaperProps={{ sx: { bgcolor: '#16161f', color: '#fff', borderRadius: '16px', minWidth: 400, border: '1px solid rgba(255,255,255,0.08)' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>Rate {displayName}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Rating 
+                size="large" 
+                value={directRating} 
+                onChange={(_, newValue) => setDirectRating(newValue)} 
+                sx={{ '& .MuiRating-iconFilled': { color: '#f59e0b' }, '& .MuiRating-iconEmpty': { color: 'rgba(255,255,255,0.1)' } }}
+              />
+            </Box>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              placeholder="What was it like working with them? Share your experience..."
+              value={directComment}
+              onChange={e => setDirectComment(e.target.value)}
+              disabled={submittingReview}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: '#e0e0ef',
+                  bgcolor: 'rgba(0,0,0,0.2)',
+                  borderRadius: '12px',
+                  '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                  '&.Mui-focused fieldset': { borderColor: '#a855f7' }
+                }
+              }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button 
+            onClick={() => setReviewDialogOpen(false)} 
+            disabled={submittingReview}
+            sx={{ color: '#8b8b9e', textTransform: 'none', fontWeight: 600 }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDirectReviewSubmit}
+            disabled={submittingReview}
+            variant="contained"
+            sx={{ 
+              bgcolor: '#a855f7', color: '#fff', textTransform: 'none', fontWeight: 700, borderRadius: '8px',
+              '&:hover': { bgcolor: '#9333ea' }
+            }}
+          >
+            {submittingReview ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'Submit Rating'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

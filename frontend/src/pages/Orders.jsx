@@ -134,7 +134,8 @@ const Orders = () => {
           {orders.map(order => {
             const isBuyer = user?.id === order.buyerId;
             const statusCfg = STATUS_COLORS[order.status] || STATUS_COLORS.PENDING;
-            const canReview = isBuyer && order.status === 'COMPLETED' && !reviewedOrders.has(order.id);
+            const canReview = isBuyer && order.status === 'COMPLETED' && !order.isReviewed && !reviewedOrders.has(order.id);
+            const alreadyReviewed = isBuyer && order.status === 'COMPLETED' && (order.isReviewed || reviewedOrders.has(order.id));
             
             return (
               <AppCard key={order.id} interactive sx={{ borderRadius: '16px', p: 3, '&:hover': { borderColor: 'rgba(168,85,247,0.15)' } }}>
@@ -165,7 +166,7 @@ const Orders = () => {
                 {canReview && (
                   <ReviewForm orderId={order.id} onReviewed={handleReviewed} />
                 )}
-                {isBuyer && order.status === 'COMPLETED' && reviewedOrders.has(order.id) && (
+                {alreadyReviewed && (
                   <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(16,185,129,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: 1, border: '1px solid rgba(16,185,129,0.1)' }}>
                     <StarIcon sx={{ color: '#10b981', fontSize: 20 }} />
                     <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 600 }}>You've reviewed this order</Typography>

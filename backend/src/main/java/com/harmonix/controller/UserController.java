@@ -78,6 +78,15 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(userResponse));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> searchUsers(@RequestParam("q") String query) {
+        List<User> users = userService.searchUsersByName(query);
+        List<UserResponse> userResponses = users.stream()
+                .map(userMapper::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(userResponses));
+    }
+
     // --- New Profile System Endpoints ---
 
     @GetMapping("/me")

@@ -42,6 +42,22 @@ public class ReviewController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
+    @PostMapping("/direct")
+    public ResponseEntity<ApiResponse<ReviewResponse>> createDirectReview(
+            HttpServletRequest request,
+            @Valid @RequestBody com.harmonix.dto.request.DirectReviewRequest createRequest) {
+
+        User currentUser = AuthUtil.requireUser(request, userRepository);
+
+        ReviewResponse response = reviewService.addDirectReview(
+                currentUser.getId(),
+                currentUser.getName(),
+                createRequest
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+    }
+
     @GetMapping("/seller/{sellerId}")
     public ResponseEntity<ApiResponse<List<ReviewResponse>>> getReviewsBySeller(
             @PathVariable String sellerId) {
