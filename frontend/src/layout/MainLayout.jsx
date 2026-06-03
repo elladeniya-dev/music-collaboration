@@ -55,7 +55,6 @@ const MainLayout = () => {
     // Connect to WebSocket using the user's ID
     let notifSub = null;
     websocketService.connect(userId, () => {
-      setWsConnected(true);
       notifSub = websocketService.subscribeToNotifications(userId, (newNotif) => {
         setNotifications((prev) => {
           if (prev.some((n) => n.id === newNotif.id)) return prev;

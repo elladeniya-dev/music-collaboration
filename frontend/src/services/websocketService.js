@@ -300,7 +300,7 @@ class WebSocketService {
     if (!this.connected || !this.client) return;
 
     this.client.publish({
-      destination: '/app/message/typing',
+      destination: '/app/typing',
       body: JSON.stringify(data),
     });
   }

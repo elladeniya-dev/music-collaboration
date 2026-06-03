@@ -13,6 +13,7 @@ import AudioFileIcon from '@mui/icons-material/AudioFile';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { useUser } from '../context/UserContext';
 import { chatService, userService } from '../services';
+import websocketService from '../services/websocketService';
 import { showError, showInputDialog, showConfirmation, showSuccess, getUserId } from '../utils';
 import { useWebSocket } from '../hooks';
 import AudioWavePlayer from '../components/AudioWavePlayer';
@@ -263,7 +264,7 @@ const ChatInterface = () => {
     try {
       if (hasText) {
         if (connected) {
-          sendWsMessage(msgObj);
+          sendMessage(msgObj);
           if (isTyping) {
             sendTypingIndicator(false, user.name);
             setIsTyping(false);
