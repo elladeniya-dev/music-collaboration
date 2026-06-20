@@ -4,11 +4,12 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PersonIcon from '@mui/icons-material/Person';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { UserLevelChip, UserBadges, getMockUserMeta } from './UserBadge';
-import StatusBadge, { getMockStatus } from './StatusBadge';
+import { UserLevelChip, UserBadges } from './UserBadge';
+import { useUser } from '../context/UserContext';
+import StatusBadge from './StatusBadge';
 import AudioWavePlayer from './AudioWavePlayer';
 import { TagGroup } from './Tag';
-import { useUser } from '../context/UserContext';
+import { useNavigate } from 'react-router-dom';
 
 const PACKAGES = ['Basic', 'Standard', 'Premium'];
 const PKG_MULTIPLIERS = [1, 1.8, 3];
@@ -16,7 +17,7 @@ const PKG_COLORS = ['#5c5c72', '#a855f7', '#f59e0b'];
 const PKG_DELIVERY = [1, 0.8, 0.6];
 
 const ServiceCard = ({ service, onOrder, onDelete }) => {
-  const { user } = useUser();
+  const { user, onlineUsers } = useUser();
   const [selectedPkg, setSelectedPkg] = useState(0);
   const resolvedAudioUrl = service.audioUrl || service.previewUrl || service.mediaUrl || '';
 
@@ -35,8 +36,9 @@ const ServiceCard = ({ service, onOrder, onDelete }) => {
   const baseDelivery = service.deliveryTime || 5;
   const pkgPrice = (basePrice * PKG_MULTIPLIERS[selectedPkg]).toFixed(0);
   const pkgDelivery = Math.max(1, Math.round(baseDelivery * PKG_DELIVERY[selectedPkg]));
-  const { level, badges } = getMockUserMeta(service.sellerName);
-  const sellerStatus = getMockStatus(service.sellerName);
+  const level = service.sellerLevel || 1;
+  const badges = service.sellerBadges || [];
+  const sellerStatus = onlineUsers?.has(service.sellerId) ? 'available' : 'offline';
   const isOwner = user?.id === service.sellerId;
 
   return (

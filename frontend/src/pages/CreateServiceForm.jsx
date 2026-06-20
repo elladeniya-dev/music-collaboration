@@ -55,6 +55,7 @@ const CreateServiceForm = () => {
     title: '', category: '', description: '', tagsInput: '', tags: [],
     price: '', deliveryTime: '', mediaFiles: [],
   });
+  const [fileProgress, setFileProgress] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,6 +89,7 @@ const CreateServiceForm = () => {
 
   const handleSubmit = async () => {
     setSubmitting(true);
+    setFileProgress({});
     try {
       await serviceService.createService({
         title: formData.title,
@@ -97,10 +99,20 @@ const CreateServiceForm = () => {
         category: formData.category,
         tags: formData.tags,
         mediaFiles: formData.mediaFiles,
+      }, (progressEvent) => {
+         if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            const newProgress = {};
+            formData.mediaFiles.forEach(f => {
+                newProgress[f.name] = percentCompleted;
+            });
+            setFileProgress(newProgress);
+         }
       });
       showSuccess('Service published! 🎉');
       setStep(0);
       setFormData({ title: '', category: '', description: '', tagsInput: '', tags: [], price: '', deliveryTime: '', mediaFiles: [] });
+      setFileProgress({});
     } catch (err) {
       console.error(err);
       showError('Error creating service');
@@ -259,6 +271,7 @@ const CreateServiceForm = () => {
               accept="image/*,audio/*"
               maxFiles={5}
               accent="#a855f7"
+              fileProgress={fileProgress}
             />
           </Box>
         )}

@@ -46,6 +46,13 @@ public class User {
     @Builder.Default
     private List<PortfolioItem> portfolio = new ArrayList<>();
     
+    // Gamification
+    @Builder.Default
+    private Integer level = 1;
+    
+    @Builder.Default
+    private List<String> badges = new ArrayList<>(List.of("Newcomer"));
+    
     // Stats
     private double averageRating;
     private int totalReviews;

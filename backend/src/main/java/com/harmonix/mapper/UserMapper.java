@@ -24,6 +24,8 @@ public class UserMapper {
                 .tools(user.getTools())
                 .genres(user.getGenres())
                 .portfolio(user.getPortfolio())
+                .level(user.getLevel())
+                .badges(user.getBadges())
                 .averageRating(user.getAverageRating())
                 .totalReviews(user.getTotalReviews())
                 .completedOrders(user.getCompletedOrders())

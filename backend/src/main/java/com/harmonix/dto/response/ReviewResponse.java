@@ -17,6 +17,8 @@ public class ReviewResponse {
     private String orderId;
     private String reviewerId;
     private String reviewerName;
+    private Integer reviewerLevel;
+    private java.util.List<String> reviewerBadges;
     private String sellerId;
     private Integer rating;
     private String comment;

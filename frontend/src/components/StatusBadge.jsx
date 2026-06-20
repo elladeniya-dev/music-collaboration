@@ -8,13 +8,6 @@ const STATUS_CONFIG = {
   offline: { label: 'Offline', color: '#5c5c72', glow: 'none' },
 };
 
-// Generate mock status from name
-export const getMockStatus = (name) => {
-  if (!name) return 'offline';
-  const hash = name.length + (name.charCodeAt(0) || 0);
-  const statuses = ['available', 'available', 'busy', 'available', 'offline'];
-  return statuses[hash % statuses.length];
-};
 
 const StatusBadge = ({ status = 'offline', showLabel = true, size = 'small' }) => {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.offline;

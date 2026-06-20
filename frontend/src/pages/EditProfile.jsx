@@ -55,6 +55,7 @@ const EditProfile = () => {
   const [availability, setAvailability] = useState('AVAILABLE');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
+  const [fileProgress, setFileProgress] = useState({});
 
   useEffect(() => {
     loadProfile();
@@ -151,6 +152,7 @@ const EditProfile = () => {
     if (portfolioFiles.length === 0) return;
     
     setUploadingPortfolio(true);
+    setFileProgress({});
     try {
         for (const file of portfolioFiles) {
             let title = prompt(`Enter title for ${file.name}:`) || file.name;
@@ -158,10 +160,16 @@ const EditProfile = () => {
             if (file.type.startsWith('audio/')) type = 'AUDIO';
             if (file.type.startsWith('video/')) type = 'VIDEO';
             
-            const updatedUser = await userService.uploadPortfolioItem(title, type, file);
+            const updatedUser = await userService.uploadPortfolioItem(title, type, file, (progressEvent) => {
+               if (progressEvent.total) {
+                  const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                  setFileProgress(prev => ({...prev, [file.name]: percentCompleted}));
+               }
+            });
             setPortfolioItems(updatedUser.portfolio);
         }
         setPortfolioFiles([]);
+        setFileProgress({});
         showSuccess('Portfolio updated!');
     } catch (error) {
         showError('Failed to upload portfolio item(s)');
@@ -271,7 +279,7 @@ const EditProfile = () => {
           {/* Upload */}
           <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>Add New Work</Typography>
-            <FileUploadZone files={portfolioFiles} onChange={setPortfolioFiles} accept="image/*,audio/*,video/*" maxFiles={10} accent="#a855f7" />
+            <FileUploadZone files={portfolioFiles} onChange={setPortfolioFiles} accept="image/*,audio/*,video/*" maxFiles={10} accent="#a855f7" fileProgress={fileProgress} />
             {portfolioFiles.length > 0 && (
               <Button 
                 onClick={handlePortfolioUpload} 

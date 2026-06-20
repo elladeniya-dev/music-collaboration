@@ -17,14 +17,15 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import { AppButton, AppInput, EmptyState, PageHeader } from '../components/ui';
 
 const CATEGORIES = [
-  { label: 'Music Production', icon: <MusicNoteIcon />, color: '#a855f7' },
-  { label: 'Mixing & Mastering', icon: <HeadphonesIcon />, color: '#6366f1' },
-  { label: 'Vocals', icon: <MicIcon />, color: '#ec4899' },
-  { label: 'Instrument Lessons', icon: <PianoIcon />, color: '#f59e0b' },
-  { label: 'Sound Design', icon: <GraphicEqIcon />, color: '#10b981' },
-  { label: 'Songwriting', icon: <LibraryMusicIcon />, color: '#06b6d4' },
-  { label: 'Video Production', icon: <VideocamIcon />, color: '#f97316' },
-  { label: 'Graphic Design', icon: <BrushIcon />, color: '#ef4444' },
+  { id: null, label: 'All Services', icon: <StorefrontIcon />, color: '#ffffff' },
+  { id: 'Music Production', label: 'Music Production', icon: <MusicNoteIcon />, color: '#a855f7' },
+  { id: 'Mixing & Mastering', label: 'Mixing & Mastering', icon: <HeadphonesIcon />, color: '#6366f1' },
+  { id: 'Vocals', label: 'Vocals', icon: <MicIcon />, color: '#ec4899' },
+  { id: 'Instrument Lessons', label: 'Instrument Lessons', icon: <PianoIcon />, color: '#f59e0b' },
+  { id: 'Sound Design', label: 'Sound Design', icon: <GraphicEqIcon />, color: '#10b981' },
+  { id: 'Songwriting', label: 'Songwriting', icon: <LibraryMusicIcon />, color: '#06b6d4' },
+  { id: 'Video Production', label: 'Video Production', icon: <VideocamIcon />, color: '#f97316' },
+  { id: 'Graphic Design', label: 'Graphic Design', icon: <BrushIcon />, color: '#ef4444' },
 ];
 
 const SkeletonCard = () => (
@@ -178,13 +179,17 @@ const ServiceMarketplace = () => {
 
       {/* ═══════════════════ CATEGORIES ═══════════════════ */}
       <Box sx={{ px: { xs: 2, md: 3 }, pb: 4 }}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(4, 1fr)', md: 'repeat(5, 1fr)', lg: 'repeat(9, 1fr)' }, 
+          gap: 1.5 
+        }}>
           {CATEGORIES.map((cat) => {
-            const isActive = activeCategory === cat.label;
+            const isActive = activeCategory === cat.id;
             return (
               <Box
                 key={cat.label}
-                onClick={() => setActiveCategory(isActive ? null : cat.label)}
+                onClick={() => setActiveCategory(cat.id)}
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -215,7 +220,7 @@ const ServiceMarketplace = () => {
               </Box>
             );
           })}
-        </div>
+        </Box>
       </Box>
 
       {/* ═══════════════════ SERVICES GRID ═══════════════════ */}

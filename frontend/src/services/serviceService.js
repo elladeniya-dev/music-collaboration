@@ -28,7 +28,7 @@ class ServiceService {
     }
   }
 
-  async createService(data) {
+  async createService(data, onUploadProgress) {
     try {
       const mediaFiles = Array.isArray(data.mediaFiles) ? data.mediaFiles : [];
       const imageFile = mediaFiles.find((file) => file?.type?.startsWith('image/'));
@@ -62,12 +62,14 @@ class ServiceService {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          onUploadProgress
         });
       } else {
         response = await axiosInstance.post('/services', data, {
           headers: {
             'Content-Type': 'application/json',
           },
+          onUploadProgress
         });
       }
 

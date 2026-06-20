@@ -25,7 +25,7 @@ const formatTimeAgo = (dateString) => {
 
 const MainLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { user, loadingUser } = useUser();
+  const { user, loadingUser, setOnlineUsers } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -69,8 +69,17 @@ const MainLayout = () => {
         setUnreadCount((prev) => prev + 1);
       });
       // Subscribe to global presence to send presence broadcast
-      websocketService.subscribeToPresence(() => {});
-      websocketService.sendPresenceIndicator({ userId, online: true });
+      websocketService.subscribeToPresence((presenceData) => {
+        if (!presenceData || !presenceData.userId) return;
+        const isUserOnline = presenceData.isOnline ?? presenceData.online;
+        setOnlineUsers((prev) => {
+          const newSet = new Set(prev);
+          if (isUserOnline) newSet.add(presenceData.userId);
+          else newSet.delete(presenceData.userId);
+          return newSet;
+        });
+      });
+      websocketService.sendPresenceIndicator({ userId, isOnline: true });
     });
 
     // Fallback polling for reliability

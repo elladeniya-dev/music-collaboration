@@ -20,7 +20,7 @@ const formatSize = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const FileUploadZone = ({ files = [], onChange, accept, maxFiles = 5, accent = '#a855f7' }) => {
+const FileUploadZone = ({ files = [], onChange, accept, maxFiles = 5, accent = '#a855f7', fileProgress = {} }) => {
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef(null);
 
@@ -111,12 +111,14 @@ const FileUploadZone = ({ files = [], onChange, accept, maxFiles = 5, accent = '
                   {formatSize(file.size)}
                 </Typography>
               </Box>
-              {/* Progress bar mock */}
+              {/* Real Progress bar */}
               <Box sx={{ width: 60, height: 4, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                 <Box sx={{
-                  height: '100%', width: '100%', bgcolor: '#10b981', borderRadius: 2,
-                  animation: 'upload-fill 1.5s ease-out forwards',
-                  '@keyframes upload-fill': { '0%': { width: '0%' }, '100%': { width: '100%' } },
+                  height: '100%', 
+                  width: `${fileProgress[file.name] !== undefined ? fileProgress[file.name] : 0}%`, 
+                  bgcolor: '#10b981', 
+                  borderRadius: 2,
+                  transition: 'width 0.2s ease-out'
                 }} />
               </Box>
               <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleRemove(i); }}

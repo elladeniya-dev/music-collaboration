@@ -17,21 +17,29 @@ const BADGES = {
   top_seller: { label: 'Top Seller', color: '#10b981', icon: <StarIcon sx={{ fontSize: 11 }} /> },
   verified: { label: 'Verified', color: '#3b82f6', icon: <VerifiedIcon sx={{ fontSize: 11 }} /> },
   active_collaborator: { label: 'Active Collaborator', color: '#ec4899', icon: <GroupIcon sx={{ fontSize: 11 }} /> },
+  Newcomer: { label: 'Newcomer', color: '#8b5cf6', icon: <StarIcon sx={{ fontSize: 11 }} /> }
 };
 
-// Generate mock level + badges from name
+// Generate mock level + badges from name (kept for mock screens like CollabRoom)
 export const getMockUserMeta = (name) => {
-  if (!name) return { level: 'beginner', badges: [] };
+  if (!name) return { level: 1, badges: [] };
   const hash = name.length + (name.charCodeAt(0) || 0);
-  const levels = ['beginner', 'intermediate', 'pro', 'top_artist'];
+  const levels = [1, 2, 3, 4];
   const level = levels[hash % levels.length];
   const badgeKeys = Object.keys(BADGES);
   const badges = badgeKeys.filter((_, i) => (hash + i) % 3 === 0);
   return { level, badges };
 };
 
-export const UserLevelChip = ({ level = 'beginner', size = 'small' }) => {
-  const cfg = LEVELS[level] || LEVELS.beginner;
+export const UserLevelChip = ({ level = 1, size = 'small' }) => {
+  let levelKey = level;
+  if (typeof level === 'number') {
+      if (level >= 4) levelKey = 'top_artist';
+      else if (level === 3) levelKey = 'pro';
+      else if (level === 2) levelKey = 'intermediate';
+      else levelKey = 'beginner';
+  }
+  const cfg = LEVELS[levelKey] || LEVELS.beginner;
   return (
     <Chip
       icon={cfg.icon || undefined}
@@ -56,8 +64,7 @@ export const UserBadges = ({ badges = [] }) => {
   return (
     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
       {badges.map((key) => {
-        const cfg = BADGES[key];
-        if (!cfg) return null;
+        const cfg = BADGES[key] || { label: key, color: '#8b5cf6', icon: <StarIcon sx={{ fontSize: 11 }} /> };
         return (
           <Tooltip key={key} title={cfg.label} placement="top">
             <Box

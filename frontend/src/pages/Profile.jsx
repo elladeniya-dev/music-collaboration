@@ -12,7 +12,7 @@ import WorkIcon from '@mui/icons-material/Work';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { useUser } from '../context/UserContext';
 import StatusBadge from '../components/StatusBadge';
-import { UserLevelChip, UserBadges, getMockUserMeta } from '../components/UserBadge';
+import { UserLevelChip, UserBadges } from '../components/UserBadge';
 import { TagGroup } from '../components/Tag';
 import PortfolioItem from '../components/PortfolioItem';
 import ReviewCard from '../components/ReviewCard';
@@ -124,7 +124,8 @@ const Profile = () => {
     );
   }
 
-  const { level, badges } = getMockUserMeta(profileData.name);
+  const level = profileData.level || 1;
+  const badges = profileData.badges || [];
   const displayName = profileData.name || 'Artist';
   
   const portfolio = profileData.portfolio || [];
@@ -345,9 +346,9 @@ const Profile = () => {
           </Box>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {reviews.length > 0 ? (
-               reviews.map(r => (
-                 <ReviewCard key={r.id} review={{ id: r.id, name: r.reviewerName, rating: r.rating, comment: r.comment, date: formatDate(r.createdAt) }} />
-               ))
+                 reviews.map(r => (
+                   <ReviewCard key={r.id} review={{ id: r.id, name: r.reviewerName, rating: r.rating, comment: r.comment, date: formatDate(r.createdAt), reviewerLevel: r.reviewerLevel, reviewerBadges: r.reviewerBadges }} />
+                 ))
             ) : (
                <Box sx={{ gridColumn: '1/-1' }}>
                  <EmptyState

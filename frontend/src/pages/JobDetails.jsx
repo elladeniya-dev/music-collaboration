@@ -6,12 +6,12 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PersonIcon from '@mui/icons-material/Person';
-import { jobPostService } from '../services';
+import { jobPostService, jobApplicationService } from '../services';
 import { formatDate, parseSkills, getUserId, isResourceOwner } from '../utils';
 import { showSuccess } from '../utils';
 import { useUser } from '../context/UserContext';
 import ProposalModal from '../components/ProposalModal';
-import { UserLevelChip, UserBadges, getMockUserMeta } from '../components/UserBadge';
+import { UserLevelChip, UserBadges } from '../components/UserBadge';
 import { AppButton, AppCard, EmptyState, PageHeader } from '../components/ui';
 
 const STATUS_COLORS = {
@@ -20,11 +20,7 @@ const STATUS_COLORS = {
   COMPLETED: { bg: 'rgba(99,102,241,0.08)', color: '#6366f1', border: 'rgba(99,102,241,0.15)' },
 };
 
-const MOCK_APPLICANTS = [
-  { id: 'a1', name: 'Sarah Chen', bid: 120, deliveryDays: 5, rating: 4.8, coverLetter: 'Experienced vocalist with 8+ years in R&B...' },
-  { id: 'a2', name: 'Marcus Johnson', bid: 95, deliveryDays: 7, rating: 4.5, coverLetter: 'Professional mixing engineer, worked with...' },
-  { id: 'a3', name: 'Aisha Williams', bid: 150, deliveryDays: 3, rating: 4.9, coverLetter: 'Grammy-nominated producer specializing in...' },
-];
+
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -33,11 +29,24 @@ const JobDetails = () => {
   const [loading, setLoading] = useState(true);
   const [proposalOpen, setProposalOpen] = useState(false);
   const [jobStatus, setJobStatus] = useState('OPEN');
-  const [applicants, setApplicants] = useState(MOCK_APPLICANTS);
+  const [applicants, setApplicants] = useState([]);
   const [activeTab, setActiveTab] = useState('details');
 
   useEffect(() => {
-    jobPostService.getJobPostById(id).then(setJob).catch(console.error).finally(() => setLoading(false));
+    setLoading(true);
+    Promise.all([
+      jobPostService.getJobPostById(id),
+      jobApplicationService.getJobApplicants(id).catch(() => [])
+    ])
+    .then(([jobData, applicantsData]) => {
+      setJob(jobData);
+      setApplicants(applicantsData);
+      // Check if job is accepted based on applicants
+      const accepted = applicantsData.find(a => a.status === 'ACCEPTED');
+      if (accepted) setJobStatus('IN_PROGRESS');
+    })
+    .catch(console.error)
+    .finally(() => setLoading(false));
   }, [id]);
 
   if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress sx={{ color: '#a855f7' }} /></Box>;
@@ -46,9 +55,15 @@ const JobDetails = () => {
   const isOwner = isResourceOwner(user, job.userId);
   const statusCfg = STATUS_COLORS[jobStatus] || STATUS_COLORS.OPEN;
 
-  const handleAcceptApplicant = (applicant) => {
-    setJobStatus('IN_PROGRESS');
-    showSuccess(`Accepted ${applicant.name}!`);
+  const handleAcceptApplicant = async (applicant) => {
+    try {
+      await jobApplicationService.acceptApplication(applicant.id);
+      setJobStatus('IN_PROGRESS');
+      setApplicants(prev => prev.map(a => a.id === applicant.id ? { ...a, status: 'ACCEPTED' } : a));
+      showSuccess(`Accepted ${applicant.applicantName}!`);
+    } catch (err) {
+      showError('Failed to accept applicant.');
+    }
   };
 
   return (
@@ -109,20 +124,19 @@ const JobDetails = () => {
               {activeTab === 'applicants' && isOwner && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   {applicants.map(a => {
-                    const { level, badges } = getMockUserMeta(a.name);
                     return (
                       <Box key={a.id} sx={{ bgcolor: 'rgba(255,255,255,0.02)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', p: 3 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Avatar sx={{ width: 36, height: 36, background: 'linear-gradient(135deg, #a855f7, #6366f1)', fontSize: 14, fontWeight: 600 }}>{a.name[0]}</Avatar>
+                            <Avatar sx={{ width: 36, height: 36, background: 'linear-gradient(135deg, #a855f7, #6366f1)', fontSize: 14, fontWeight: 600 }}>{a.applicantName[0]}</Avatar>
                             <Box>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef' }}>{a.name}</Typography>
-                                <UserLevelChip level={level} />
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef' }}>{a.applicantName}</Typography>
+                                <UserLevelChip level={a.applicantLevel || 1} />
                               </Box>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
-                                <Rating value={a.rating} precision={0.1} readOnly size="small" sx={{ '& .MuiRating-iconFilled': { color: '#f59e0b' }, '& .MuiRating-iconEmpty': { color: 'rgba(255,255,255,0.1)' }, fontSize: '0.75rem' }} />
-                                <Typography variant="caption" sx={{ color: '#5c5c72' }}>{a.rating}</Typography>
+                                <Rating value={a.applicantRating || 0} precision={0.1} readOnly size="small" sx={{ '& .MuiRating-iconFilled': { color: '#f59e0b' }, '& .MuiRating-iconEmpty': { color: 'rgba(255,255,255,0.1)' }, fontSize: '0.75rem' }} />
+                                <Typography variant="caption" sx={{ color: '#5c5c72' }}>{a.applicantRating || 0}</Typography>
                               </Box>
                             </Box>
                           </Box>
@@ -131,12 +145,16 @@ const JobDetails = () => {
                             <Typography variant="caption" sx={{ color: '#5c5c72' }}>{a.deliveryDays}d delivery</Typography>
                           </Box>
                         </Box>
-                        <UserBadges badges={badges} />
+                        <UserBadges badges={a.applicantBadges || ['Newcomer']} />
                         <Typography variant="body2" sx={{ color: '#8b8b9e', mt: 1.5, mb: 2, lineHeight: 1.6 }}>{a.coverLetter}</Typography>
-                        <AppButton size="small" startIcon={<CheckCircleIcon sx={{ fontSize: 14 }} />} onClick={() => handleAcceptApplicant(a)}
-                          sx={{ borderRadius: '10px', px: 2.5, background: 'linear-gradient(135deg, #10b981, #059669)', '&:hover': { boxShadow: '0 0 20px rgba(16,185,129,0.2)' } }}>
-                          Accept
-                        </AppButton>
+                        {a.status === 'ACCEPTED' ? (
+                          <Chip label="Accepted" size="small" icon={<CheckCircleIcon />} sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#10b981', fontWeight: 700, border: '1px solid rgba(16,185,129,0.2)' }} />
+                        ) : jobStatus === 'OPEN' && (
+                          <AppButton size="small" startIcon={<CheckCircleIcon sx={{ fontSize: 14 }} />} onClick={() => handleAcceptApplicant(a)}
+                            sx={{ borderRadius: '10px', px: 2.5, background: 'linear-gradient(135deg, #10b981, #059669)', '&:hover': { boxShadow: '0 0 20px rgba(16,185,129,0.2)' } }}>
+                            Accept
+                          </AppButton>
+                        )}
                       </Box>
                     );
                   })}
@@ -165,7 +183,17 @@ const JobDetails = () => {
       </Box>
 
       <ProposalModal open={proposalOpen} onClose={() => setProposalOpen(false)} job={job}
-        onSubmit={(data) => { showSuccess('Proposal submitted!'); }} />
+        onSubmit={async (data) => {
+          try {
+            await jobApplicationService.applyToJob(job.id, data);
+            showSuccess('Proposal submitted!');
+            setProposalOpen(false);
+            const updatedApplicants = await jobApplicationService.getJobApplicants(job.id).catch(() => []);
+            setApplicants(updatedApplicants);
+          } catch (err) {
+            showError('Failed to submit proposal.');
+          }
+        }} />
     </Box>
   );
 };

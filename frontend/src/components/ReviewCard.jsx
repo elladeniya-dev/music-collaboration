@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Typography, Rating, Avatar } from '@mui/material';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
-import { UserLevelChip, getMockUserMeta } from './UserBadge';
+import { UserLevelChip } from './UserBadge';
 
 const ReviewCard = ({ review }) => {
-  const { level } = getMockUserMeta(review.name);
+  const level = review.reviewerLevel || 1;
 
   return (
     <Box sx={{

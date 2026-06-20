@@ -6,6 +6,7 @@ export const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
 
   useEffect(() => {
     authService.getCurrentUser()
@@ -20,7 +21,7 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, setUser, loadingUser }}>
+    <UserContext.Provider value={{ user, setUser, loadingUser, onlineUsers, setOnlineUsers }}>
       {children}
     </UserContext.Provider>
   );

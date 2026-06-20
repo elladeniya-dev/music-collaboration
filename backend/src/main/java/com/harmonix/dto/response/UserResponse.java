@@ -30,6 +30,10 @@ public class UserResponse {
     private List<String> genres;
     private List<PortfolioItem> portfolio;
     
+    // Gamification
+    private Integer level;
+    private List<String> badges;
+    
     // Stats
     private double averageRating;
     private int totalReviews;
