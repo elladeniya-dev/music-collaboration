@@ -35,4 +35,11 @@ public class NotificationController {
         notificationService.markAsRead(id, user.getId());
         return ResponseEntity.ok(ApiResponse.success("Notification marked as read", null));
     }
+
+    @PutMapping("/read-all")
+    public ResponseEntity<ApiResponse<Void>> markAllAsRead(HttpServletRequest request) {
+        User user = AuthUtil.requireUser(request, userRepository);
+        notificationService.markAllAsRead(user.getId());
+        return ResponseEntity.ok(ApiResponse.success("All notifications marked as read", null));
+    }
 }

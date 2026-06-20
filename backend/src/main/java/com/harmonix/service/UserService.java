@@ -50,6 +50,12 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User updateProfileImage(String userId, String imageUrl) {
+        User user = getUserById(userId);
+        user.setProfileImage(imageUrl);
+        return userRepository.save(user);
+    }
+
     public User addPortfolioItem(String userId, PortfolioRequest dto) {
         User user = getUserById(userId);
 

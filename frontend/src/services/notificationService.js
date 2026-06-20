@@ -20,6 +20,16 @@ class NotificationService {
       throw error;
     }
   }
+
+  async markAllAsRead() {
+    try {
+      const response = await axios.put('/notifications/read-all');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      throw error;
+    }
+  }
 }
 
 export default new NotificationService();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Box, Typography, Avatar, IconButton, Tooltip, Badge, Popover, List, ListItem, ListItemText, ListItemAvatar, Divider, Dialog, TextField, InputAdornment, CircularProgress, ListSubheader, ListItemButton } from '@mui/material';
-import { Notifications, Search as SearchIcon, ShoppingCart, Message, Star, Close as CloseIcon, Person, Work, LocalOffer } from '@mui/icons-material';
+import { Notifications, Search as SearchIcon, ShoppingCart, Message, Star, Close as CloseIcon, Person, Work, LocalOffer, CheckCircleOutline } from '@mui/icons-material';
 import Sidebar from '../components/Sidebar';
 import { useUser } from '../context/UserContext';
 import { notificationService, globalSearchService } from '../services';
@@ -105,6 +105,27 @@ const MainLayout = () => {
     if (notif.type === 'ORDER') navigate('/orders');
     else if (notif.type === 'MESSAGE') navigate('/chat');
     else if (notif.type === 'REVIEW') navigate('/profile');
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true, read: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all as read', err);
+    }
+  };
+
+  const handleMarkSingleAsRead = async (e, notif) => {
+    e.stopPropagation();
+    try {
+      await notificationService.markAsRead(notif.id);
+      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true, read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to mark as read', err);
+    }
   };
 
   const handleGlobalSearch = async (q) => {
@@ -231,11 +252,22 @@ const MainLayout = () => {
             >
                 <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#fff' }}>Notifications</Typography>
-                  {unreadCount > 0 && (
-                    <Typography variant="caption" sx={{ color: '#a855f7', bgcolor: 'rgba(168, 85, 247, 0.1)', px: 1, py: 0.5, borderRadius: 1 }}>
-                      {unreadCount} new
-                    </Typography>
-                  )}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    {unreadCount > 0 && (
+                      <Typography 
+                        variant="caption" 
+                        onClick={handleMarkAllAsRead}
+                        sx={{ cursor: 'pointer', color: '#a855f7', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
+                      >
+                        Mark all as read
+                      </Typography>
+                    )}
+                    {unreadCount > 0 && (
+                      <Typography variant="caption" sx={{ color: '#a855f7', bgcolor: 'rgba(168, 85, 247, 0.1)', px: 1, py: 0.5, borderRadius: 1 }}>
+                        {unreadCount} new
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
                 <List sx={{ p: 0 }}>
                   {notifications.length === 0 ? (
@@ -278,7 +310,14 @@ const MainLayout = () => {
                               }}
                             />
                             {isUnread && (
-                              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#a855f7', ml: 2 }} />
+                              <Tooltip title="Mark as read">
+                                <IconButton size="small" onClick={(e) => handleMarkSingleAsRead(e, notif)} sx={{ ml: 1, color: '#a855f7', '&:hover': { color: '#c084fc' } }}>
+                                  <CheckCircleOutline fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            {isUnread && !notif.read && (
+                              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#a855f7', ml: 1 }} />
                             )}
                           </ListItem>
                           {index < notifications.length - 1 && <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />}

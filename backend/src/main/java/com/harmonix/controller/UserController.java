@@ -11,6 +11,7 @@ import com.harmonix.entity.User;
 import com.harmonix.exception.ResourceNotFoundException;
 import com.harmonix.mapper.UserMapper;
 import com.harmonix.repository.UserRepository;
+import com.harmonix.service.CloudinaryService;
 import com.harmonix.service.UserService;
 import com.harmonix.util.AuthUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +33,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final UserService userService;
+    private final CloudinaryService cloudinaryService;
 
     // --- Original Endpoints ---
 
@@ -112,6 +115,26 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(updatedUser)));
     }
 
+    @PostMapping(value = "/profile-image", consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfileImage(
+            HttpServletRequest request,
+            @RequestParam("image") MultipartFile image) {
+
+        User currentUser = AuthUtil.requireUser(request, userRepository);
+        
+        if (image == null || image.isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Image file is required"));
+        }
+
+        try {
+            String imageUrl = cloudinaryService.uploadImage(image);
+            User updatedUser = userService.updateProfileImage(currentUser.getId(), imageUrl);
+            return ResponseEntity.ok(ApiResponse.success("Profile image updated successfully", userMapper.toResponse(updatedUser)));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.error("Failed to upload image: " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/portfolio")
     public ResponseEntity<ApiResponse<UserResponse>> addPortfolioItem(
             HttpServletRequest request,
@@ -121,6 +144,33 @@ public class UserController {
         User updatedUser = userService.addPortfolioItem(currentUser.getId(), portfolioRequest);
         
         return ResponseEntity.ok(ApiResponse.success(userMapper.toResponse(updatedUser)));
+    }
+
+    @PostMapping(value = "/portfolio/upload", consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<UserResponse>> uploadPortfolioItem(
+            HttpServletRequest request,
+            @RequestParam("title") String title,
+            @RequestParam("type") String type,
+            @RequestParam("file") MultipartFile file) {
+
+        User currentUser = AuthUtil.requireUser(request, userRepository);
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("File is required"));
+        }
+
+        try {
+            String url = cloudinaryService.uploadMedia(file);
+            PortfolioRequest portfolioRequest = new PortfolioRequest();
+            portfolioRequest.setTitle(title);
+            portfolioRequest.setType(com.harmonix.entity.MediaType.valueOf(type.toUpperCase()));
+            portfolioRequest.setUrl(url);
+
+            User updatedUser = userService.addPortfolioItem(currentUser.getId(), portfolioRequest);
+            return ResponseEntity.ok(ApiResponse.success("Portfolio item added successfully", userMapper.toResponse(updatedUser)));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.error("Failed to upload portfolio item: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/portfolio/{portfolioId}")

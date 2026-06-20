@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Avatar, Button, TextField, IconButton, CircularProgress } from '@mui/material';
+import { Box, Typography, Avatar, Button, TextField, IconButton, CircularProgress, MenuItem } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import SaveIcon from '@mui/icons-material/Save';
@@ -30,7 +30,7 @@ const inputSx = {
 const TABS = ['Profile Info', 'Portfolio', 'Skills & Tools', 'Account'];
 
 const EditProfile = () => {
-  const { user, login } = useUser();
+  const { user, setUser } = useUser();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -51,6 +51,10 @@ const EditProfile = () => {
   
   const [portfolioFiles, setPortfolioFiles] = useState([]);
   const [portfolioItems, setPortfolioItems] = useState([]);
+  
+  const [availability, setAvailability] = useState('AVAILABLE');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -68,6 +72,7 @@ const EditProfile = () => {
       setTools(data.tools || []);
       setGenres(data.genres || []);
       setPortfolioItems(data.portfolio || []);
+      setAvailability(data.availability || 'AVAILABLE');
       setLoading(false);
     } catch (error) {
       showError('Failed to load profile');
@@ -88,13 +93,14 @@ const EditProfile = () => {
       });
       
       // Update global context so header avatar updates
-      if (user) {
-         login({ ...user, name: updatedUser.name }); 
+      if (user && setUser) {
+         setUser({ ...user, name: updatedUser.name }); 
       }
       
       showSuccess('Profile updated successfully!');
     } catch (error) {
-      showError('Failed to save profile');
+      console.error(error);
+      showError('Failed to save profile: ' + (error.response?.data?.message || error.message));
     } finally {
       setSaving(false);
     }
@@ -111,6 +117,58 @@ const EditProfile = () => {
   };
 
   const removeTag = (setter) => (tag) => setter(prev => prev.filter(t => t !== tag));
+
+  const handleProfileImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setUploadingImage(true);
+    try {
+      const updatedUser = await userService.uploadProfileImage(file);
+      if (user && setUser) {
+         setUser({ ...user, profileImage: updatedUser.profileImage }); 
+      }
+      showSuccess('Profile image updated!');
+    } catch (error) {
+      showError('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleAvailabilityChange = async (e) => {
+    const newVal = e.target.value;
+    setAvailability(newVal);
+    try {
+      await userService.updateAvailability(newVal);
+      showSuccess('Availability updated!');
+    } catch (error) {
+      showError('Failed to update availability');
+    }
+  };
+
+  const handlePortfolioUpload = async () => {
+    if (portfolioFiles.length === 0) return;
+    
+    setUploadingPortfolio(true);
+    try {
+        for (const file of portfolioFiles) {
+            let title = prompt(`Enter title for ${file.name}:`) || file.name;
+            let type = 'IMAGE';
+            if (file.type.startsWith('audio/')) type = 'AUDIO';
+            if (file.type.startsWith('video/')) type = 'VIDEO';
+            
+            const updatedUser = await userService.uploadPortfolioItem(title, type, file);
+            setPortfolioItems(updatedUser.portfolio);
+        }
+        setPortfolioFiles([]);
+        showSuccess('Portfolio updated!');
+    } catch (error) {
+        showError('Failed to upload portfolio item(s)');
+    } finally {
+        setUploadingPortfolio(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -175,9 +233,11 @@ const EditProfile = () => {
             <Box sx={{ position: 'relative' }}>
               <Avatar src={user?.profileImage}
                 sx={{ width: 80, height: 80, background: 'linear-gradient(135deg, #a855f7, #6366f1)', fontSize: 28, fontWeight: 800 }}>
-                {profile.name?.[0] || 'U'}
+                {uploadingImage ? <CircularProgress size={24} color="inherit" /> : (profile.name?.[0] || 'U')}
               </Avatar>
-              <IconButton size="small"
+              <input type="file" id="profile-image-upload" hidden accept="image/*" onChange={handleProfileImageUpload} />
+              <IconButton size="small" onClick={() => document.getElementById('profile-image-upload').click()}
+                disabled={uploadingImage}
                 sx={{ position: 'absolute', bottom: -4, right: -4, width: 28, height: 28,
                   bgcolor: '#a855f7', color: 'white', '&:hover': { bgcolor: '#9333ea' } }}>
                 <CameraAltIcon sx={{ fontSize: 14 }} />
@@ -196,6 +256,11 @@ const EditProfile = () => {
               helperText={<Typography variant="caption" sx={{ color: '#4a4a5e' }}>e.g. Music Producer, Mixing Engineer, Vocalist</Typography>} />
             <AppInput label="Bio" fullWidth multiline rows={4} value={profile.bio} onChange={(e) => handleProfileChange('bio', e.target.value)} sx={inputSx}
               helperText={<Typography variant="caption" sx={{ color: '#4a4a5e' }}>{profile.bio?.length || 0}/500 characters</Typography>} />
+            <AppInput select label="Availability Status" fullWidth value={availability} onChange={handleAvailabilityChange} sx={inputSx}>
+              <MenuItem value="AVAILABLE">Available</MenuItem>
+              <MenuItem value="BUSY">Busy</MenuItem>
+              <MenuItem value="LOOKING_FOR_WORK">Looking for Work</MenuItem>
+            </AppInput>
           </Box>
         </Box>
       )}
@@ -207,9 +272,15 @@ const EditProfile = () => {
           <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', mb: 2 }}>Add New Work</Typography>
             <FileUploadZone files={portfolioFiles} onChange={setPortfolioFiles} accept="image/*,audio/*,video/*" maxFiles={10} accent="#a855f7" />
-            <Typography variant="caption" sx={{ color: '#a855f7', display: 'block', mt: 2 }}>
-              Note: Portfolio file uploading is simplified for this phase. 
-            </Typography>
+            {portfolioFiles.length > 0 && (
+              <Button 
+                onClick={handlePortfolioUpload} 
+                disabled={uploadingPortfolio} 
+                variant="contained"
+                sx={{ mt: 2, bgcolor: '#a855f7', color: 'white', '&:hover': { bgcolor: '#9333ea' }, borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}>
+                {uploadingPortfolio ? <CircularProgress size={20} color="inherit" /> : `Upload ${portfolioFiles.length} Item(s)`}
+              </Button>
+            )}
           </Box>
 
           {/* Existing items */}

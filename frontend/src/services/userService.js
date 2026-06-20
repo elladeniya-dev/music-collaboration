@@ -65,6 +65,34 @@ class UserService {
     }
   }
 
+  async uploadProfileImage(file) {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const response = await axiosInstance.post('/users/profile-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async uploadPortfolioItem(title, type, file) {
+    try {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('type', type);
+      formData.append('file', file);
+      const response = await axiosInstance.post('/users/portfolio/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async deletePortfolioItem(id) {
     try {
       const response = await axiosInstance.delete(`/users/portfolio/${id}`);
