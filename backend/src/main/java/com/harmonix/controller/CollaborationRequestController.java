@@ -41,6 +41,8 @@ public class CollaborationRequestController {
         
         User user = AuthUtil.requireUser(request, userRepository);
         req.setCreatorId(user.getId());
+        req.setCreatorEmail(user.getEmail());
+        req.setCreatorName(user.getName());
         CollaborationRequest created = collaborationRequestService.create(req);
         return ResponseEntity.ok(ApiResponse.success("Collaboration request created", created));
     }
@@ -51,22 +53,15 @@ public class CollaborationRequestController {
             HttpServletRequest request) {
         
         User user = AuthUtil.requireUser(request, userRepository);
-        CollaborationRequest accepted = collaborationRequestService.accept(id);
+        CollaborationRequest accepted = collaborationRequestService.accept(id, user.getId());
 
-        chatHeadService.createChatIfNotExists(user.getId(), accepted.getCreatorId());
+        return ResponseEntity.ok(ApiResponse.success("Collaboration request joined successfully", accepted));
+    }
 
-        Message msg = Message.builder()
-                .chatId(generateChatId(accepted.getCreatorId(), user.getId()))
-                .senderId(user.getId())
-                .receiverId(accepted.getCreatorId())
-                .message("I'm interested in collaborating on your project: '" + accepted.getTitle() + "'")
-                .type("text")
-                .status("sent")
-                .timestamp(Instant.now())
-                .build();
-
-        messageService.send(msg);
-        return ResponseEntity.ok(ApiResponse.success("Collaboration request accepted", accepted));
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CollaborationRequest>> getRequestById(@PathVariable String id) {
+        CollaborationRequest request = collaborationRequestService.getById(id);
+        return ResponseEntity.ok(ApiResponse.success(request));
     }
 
     @GetMapping("/open")

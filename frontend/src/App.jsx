@@ -32,7 +32,7 @@ function App() {
             <Route path="/post" element={<PostJob />} />
             <Route path="/jobs/:id" element={<JobDetails />} />
             <Route path="/requests" element={<CollabRequests />} />
-            <Route path="/collab/room" element={<CollabRoom />} />
+            <Route path="/collab/room/:id" element={<CollabRoom />} />
             <Route path="/chat" element={<ChatInterface />} />
             <Route path="/chat/:id" element={<ChatInterface />} />
 

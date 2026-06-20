@@ -79,7 +79,7 @@ const MainLayout = () => {
           return newSet;
         });
       });
-      websocketService.sendPresenceIndicator({ userId, isOnline: true });
+      websocketService.sendPresenceIndicator({ userId, online: true });
     });
 
     // Fallback polling for reliability
@@ -155,7 +155,7 @@ const MainLayout = () => {
   };
 
   const toggleSidebar = () => setIsCollapsed(prev => !prev);
-  const isChatPage = location.pathname.startsWith('/chat');
+  const isChatPage = location.pathname.startsWith('/chat') || location.pathname.startsWith('/collab/room');
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -164,6 +164,7 @@ const MainLayout = () => {
     if (path === '/job') return 'Job Board';
     if (path === '/post') return 'Post a Job';
     if (path === '/requests') return 'Collaborate';
+    if (path.startsWith('/collab/room')) return 'Collaboration Room';
     if (path.startsWith('/chat')) return 'Messages';
     if (path.startsWith('/jobs/')) return 'Job Details';
     if (path.startsWith('/job/')) return 'Edit Job';

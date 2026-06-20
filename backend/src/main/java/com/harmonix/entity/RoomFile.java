@@ -13,21 +13,20 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "collaboration_requests")
-public class CollaborationRequest {
+@Document(collection = "room_files")
+public class RoomFile {
     
     @Id
     private String id;
     
-    private String creatorId;
-    private String creatorEmail;
-    private String creatorName;
-    private String title;
-    private String description;
+    private String roomId;
+    private String uploaderId;
+    private String uploaderName;
+    private String fileName;
+    private String fileUrl;
+    private String fileType; // e.g., 'audio', 'doc', 'image'
+    private String size; // e.g., "4.5 MB"
     
     @Builder.Default
-    private java.util.List<String> memberIds = new java.util.ArrayList<>();
-    
-    private Instant createdAt;
-    private Instant updatedAt;
+    private Instant uploadedAt = Instant.now();
 }

@@ -59,3 +59,17 @@ export const getRelativeTime = (date) => {
   
   return formatDate(date);
 };
+
+/**
+ * Format a date to a time string (e.g. 2:30 PM)
+ * @param {string|Date} date - The date to format
+ * @returns {string} Formatted time string
+ */
+export const formatTime = (date) => {
+  if (!date) return '';
+  return new Date(date).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+};

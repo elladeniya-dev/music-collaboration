@@ -141,6 +141,43 @@ class WebSocketService {
   }
 
   /**
+   * Subscribe to a collab room
+   * @param {string} roomId - The collab room ID to subscribe to
+   * @param {function} callback - Callback function to handle received messages
+   * @returns {string} Subscription ID
+   */
+  subscribeToCollabRoom(roomId, callback) {
+    if (!this.client || !this.client.connected) {
+      return null;
+    }
+
+    const destination = `/topic/room/${roomId}`;
+    const subscriptionId = `collab-room-${roomId}`;
+
+    if (this.subscriptions.has(subscriptionId)) {
+      this.unsubscribe(subscriptionId);
+    }
+
+    try {
+      const subscription = this.client.subscribe(destination, (message) => {
+        try {
+          const messageData = JSON.parse(message.body);
+          callback(messageData);
+        } catch (error) {
+          console.error('Error parsing collab room message:', error);
+        }
+      });
+
+      this.subscriptions.set(subscriptionId, subscription);
+      console.log(`📩 Subscribed to collab room: ${roomId}`);
+      return subscriptionId;
+    } catch (error) {
+      console.error('Error subscribing to collab room:', error);
+      return null;
+    }
+  }
+
+  /**
    * Subscribe to personal message queue
    * @param {string} userId - User ID
    * @param {function} callback - Callback for notifications

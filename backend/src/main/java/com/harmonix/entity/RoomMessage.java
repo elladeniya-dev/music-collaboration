@@ -13,21 +13,17 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "collaboration_requests")
-public class CollaborationRequest {
+@Document(collection = "room_messages")
+public class RoomMessage {
     
     @Id
     private String id;
     
-    private String creatorId;
-    private String creatorEmail;
-    private String creatorName;
-    private String title;
-    private String description;
+    private String roomId;
+    private String senderId;
+    private String senderName;
+    private String message;
     
     @Builder.Default
-    private java.util.List<String> memberIds = new java.util.ArrayList<>();
-    
-    private Instant createdAt;
-    private Instant updatedAt;
+    private Instant timestamp = Instant.now();
 }

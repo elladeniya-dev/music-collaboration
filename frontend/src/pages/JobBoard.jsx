@@ -99,55 +99,73 @@ const JobBoard = () => {
                     transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
                     '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 15px 50px rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.2)' },
                     display: 'flex', flexDirection: 'column', height: '100%',
+                    position: 'relative', overflow: 'hidden'
                   }}
                 >
+                  {/* Background gradient hint */}
+                  <Box sx={{ position: 'absolute', top: 0, right: 0, width: 150, height: 150, background: 'radial-gradient(circle, rgba(245,158,11,0.03) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
                   {/* Type badge */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, position: 'relative', zIndex: 1 }}>
                     <Chip label={job.collaborationType || 'Remote'} size="small"
-                      sx={{ bgcolor: 'rgba(245,158,11,0.08)', color: '#f59e0b', fontWeight: 600, fontSize: '0.65rem', height: 22, borderRadius: '6px', border: '1px solid rgba(245,158,11,0.12)' }} />
+                      sx={{ bgcolor: 'rgba(245,158,11,0.08)', color: '#f59e0b', fontWeight: 600, fontSize: '0.65rem', height: 24, borderRadius: '6px', border: '1px solid rgba(245,158,11,0.12)' }} />
                     {isOwner && <Chip label="Your Post" size="small"
-                      sx={{ bgcolor: 'rgba(168,85,247,0.08)', color: '#c084fc', fontWeight: 600, fontSize: '0.6rem', height: 20, border: '1px solid rgba(168,85,247,0.12)' }} />}
+                      sx={{ bgcolor: 'rgba(168,85,247,0.08)', color: '#c084fc', fontWeight: 600, fontSize: '0.65rem', height: 24, border: '1px solid rgba(168,85,247,0.12)' }} />}
                   </Box>
 
                   {/* Title */}
-                  <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef', lineHeight: 1.35, mb: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <Typography variant="subtitle1" fontWeight={800} sx={{ color: '#e0e0ef', lineHeight: 1.3, mb: 1, fontSize: '1.15rem', letterSpacing: '-0.3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
                     {job.title}
                   </Typography>
 
                   {/* Description */}
-                  <Typography variant="caption" sx={{ color: '#5c5c72', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', mb: 2 }}>
-                    {truncateText(job.description, 100)}
+                  <Typography variant="body2" sx={{ color: '#8b8b9e', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', mb: 2.5, position: 'relative', zIndex: 1 }}>
+                    {truncateText(job.description, 120)}
                   </Typography>
 
-                  {/* Skills */}
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-                    {parseSkills(job.skillsNeeded).slice(0, 3).map((s) => (
-                      <Chip key={s} label={s} size="small"
-                        sx={{ bgcolor: 'rgba(255,255,255,0.04)', color: '#8b8b9e', fontSize: '0.6rem', height: 20, borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }} />
-                    ))}
+                  {/* Budget & Deadline */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1.5, py: 0.5, borderRadius: '6px', bgcolor: 'rgba(16,185,129,0.08)' }}>
+                      <BudgetIcon sx={{ fontSize: 16, color: '#10b981' }} />
+                      <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 700 }}>{job.budget ? `$${job.budget}` : 'Negotiable'}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1.5, py: 0.5, borderRadius: '6px', bgcolor: 'rgba(255,255,255,0.04)' }}>
+                      <DeadlineIcon sx={{ fontSize: 14, color: '#a1a1aa' }} />
+                      <Typography variant="caption" sx={{ color: '#a1a1aa', fontWeight: 600 }}>{formatDate(job.availability)}</Typography>
+                    </Box>
                   </Box>
 
-                  {/* Meta */}
+                  {/* Skills */}
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 3 }}>
+                    {parseSkills(job.skillsNeeded).slice(0, 3).map((s) => (
+                      <Chip key={s} label={s} size="small"
+                        sx={{ bgcolor: 'transparent', color: '#a1a1aa', fontSize: '0.65rem', height: 22, borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                    ))}
+                    {parseSkills(job.skillsNeeded).length > 3 && (
+                      <Typography variant="caption" sx={{ color: '#5c5c72', alignSelf: 'center', ml: 0.5, fontSize: '0.65rem' }}>+{parseSkills(job.skillsNeeded).length - 3} more</Typography>
+                    )}
+                  </Box>
+
+                  {/* Meta & Actions */}
                   <Box sx={{ mt: 'auto', pt: 2, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <DeadlineIcon sx={{ fontSize: 14, color: '#5c5c72' }} />
-                      <Typography variant="caption" sx={{ color: '#8b8b9e' }}>{formatDate(job.availability)}</Typography>
-                    </Box>
+                    <Typography variant="caption" sx={{ color: '#5c5c72', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <JobIcon sx={{ fontSize: 12, opacity: 0.5 }} /> Posted recently
+                    </Typography>
                     {!isOwner && (
                       <Button size="small"
                         onClick={(e) => { e.stopPropagation(); navigate(`/jobs/${job.id}`); }}
-                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, fontSize: '0.75rem', px: 2, py: 0.5, background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: 'white', '&:hover': { boxShadow: '0 0 15px rgba(245,158,11,0.2)' } }}>
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, fontSize: '0.75rem', px: 2, py: 0.5, background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: 'white', '&:hover': { boxShadow: '0 0 15px rgba(245,158,11,0.3)' } }}>
                         Apply Now
                       </Button>
                     )}
                   </Box>
 
                   {isOwner && (
-                    <Box mt={1.5} display="flex" gap={1}>
-                      <Button size="small" onClick={(e) => { e.stopPropagation(); navigate(`/job/${job.id}`); }}
-                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, fontSize: '0.7rem', color: '#a855f7', border: '1px solid rgba(168,85,247,0.2)', '&:hover': { bgcolor: 'rgba(168,85,247,0.08)' } }}>Edit</Button>
-                      <Button size="small" onClick={(e) => { e.stopPropagation(); handleDelete(job.id); }}
-                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, fontSize: '0.7rem', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', '&:hover': { bgcolor: 'rgba(239,68,68,0.08)' } }}>Delete</Button>
+                    <Box mt={2} display="flex" gap={1.5}>
+                      <Button size="small" fullWidth onClick={(e) => { e.stopPropagation(); navigate(`/job/${job.id}`); }}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, fontSize: '0.75rem', py: 0.75, color: '#c084fc', bgcolor: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)', '&:hover': { bgcolor: 'rgba(168,85,247,0.15)' } }}>Edit Job</Button>
+                      <Button size="small" fullWidth onClick={(e) => { e.stopPropagation(); handleDelete(job.id); }}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, fontSize: '0.75rem', py: 0.75, color: '#ef4444', bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)', '&:hover': { bgcolor: 'rgba(239,68,68,0.15)' } }}>Delete</Button>
                     </Box>
                   )}
                 </Box>

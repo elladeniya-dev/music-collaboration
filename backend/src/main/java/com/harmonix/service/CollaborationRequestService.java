@@ -20,12 +20,26 @@ public class CollaborationRequestService {
     public CollaborationRequest create(CollaborationRequest req) {
         req.setCreatedAt(Instant.now());
         req.setUpdatedAt(Instant.now());
+        if (req.getMemberIds() == null) {
+            req.setMemberIds(new java.util.ArrayList<>());
+        }
+        if (!req.getMemberIds().contains(req.getCreatorId())) {
+            req.getMemberIds().add(req.getCreatorId());
+        }
         return collaborationRequestRepository.save(req);
     }
 
-    public CollaborationRequest accept(String id) {
+    public CollaborationRequest accept(String id, String joinerId) {
         CollaborationRequest req = collaborationRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("CollaborationRequest", "id", id));
+        
+        if (req.getMemberIds() == null) {
+            req.setMemberIds(new java.util.ArrayList<>());
+        }
+        if (!req.getMemberIds().contains(joinerId)) {
+            req.getMemberIds().add(joinerId);
+        }
+        
         req.setUpdatedAt(Instant.now());
         return collaborationRequestRepository.save(req);
     }
@@ -33,6 +47,12 @@ public class CollaborationRequestService {
     @Transactional(readOnly = true)
     public List<CollaborationRequest> getAllOpen() {
         return collaborationRequestRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public CollaborationRequest getById(String id) {
+        return collaborationRequestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("CollaborationRequest", "id", id));
     }
 
     public List<CollaborationRequest> getByCreator(String creatorId) {
