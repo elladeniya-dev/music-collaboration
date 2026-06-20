@@ -127,4 +127,14 @@ public class OrderService {
 
         return orderRepository.save(order);
     }
+
+    public void cancelOrder(String userId, String orderId) {
+        Order order = getOrderById(orderId);
+
+        if (!order.getBuyerId().equals(userId) && !order.getSellerId().equals(userId)) {
+            throw new UnauthorizedException("Only the buyer or seller can cancel this order.");
+        }
+
+        orderRepository.delete(order);
+    }
 }

@@ -105,8 +105,25 @@ const JobBoard = () => {
                   {/* Background gradient hint */}
                   <Box sx={{ position: 'absolute', top: 0, right: 0, width: 150, height: 150, background: 'radial-gradient(circle, rgba(245,158,11,0.03) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
+                  {/* Image Header if available */}
+                  {job.imageUrl && (
+                    <Box sx={{ 
+                      width: 'calc(100% + 48px)', 
+                      ml: '-24px', 
+                      mt: '-24px', 
+                      mb: 3, 
+                      height: 140, 
+                      overflow: 'hidden',
+                      position: 'relative',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)'
+                    }}>
+                      <Box component="img" src={job.imageUrl} alt={job.title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: 'linear-gradient(to top, #16161f, transparent)' }} />
+                    </Box>
+                  )}
+
                   {/* Type badge */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, position: 'relative', zIndex: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, position: 'relative', zIndex: 1, ...(job.imageUrl && { mt: -1 }) }}>
                     <Chip label={job.collaborationType || 'Remote'} size="small"
                       sx={{ bgcolor: 'rgba(245,158,11,0.08)', color: '#f59e0b', fontWeight: 600, fontSize: '0.65rem', height: 24, borderRadius: '6px', border: '1px solid rgba(245,158,11,0.12)' }} />
                     {isOwner && <Chip label="Your Post" size="small"

@@ -18,7 +18,9 @@ public class OrderResponse {
     private String serviceId;
     private String serviceTitle;
     private String buyerId;
+    private String buyerName;
     private String sellerId;
+    private String sellerName;
     private double price;
     private OrderStatus status;
     private String deliveryMessage;

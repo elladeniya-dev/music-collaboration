@@ -28,9 +28,36 @@ class OrderService {
     }
   }
 
-  async deliverOrder(id, data) {
+  async deliverOrder(id, data, onUploadProgress) {
     try {
-      const response = await axiosInstance.put(`/orders/${id}/deliver`, data);
+      let payload;
+      
+      if (data instanceof FormData) {
+        payload = data;
+      } else {
+        payload = new FormData();
+        payload.append('deliveryMessage', data.deliveryMessage || '');
+        if (data.deliveryFileUrl) {
+          payload.append('fileUrl', data.deliveryFileUrl);
+        }
+        if (data.file) {
+          payload.append('file', data.file);
+        }
+      }
+
+      const response = await axiosInstance.put(`/orders/${id}/deliver`, payload, { 
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress
+      });
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async cancelOrder(id) {
+    try {
+      const response = await axiosInstance.delete(`/orders/${id}`);
       return response.data.data;
     } catch (error) {
       throw error;

@@ -79,7 +79,7 @@ const JobDetails = () => {
         {/* Main Content */}
         <Box sx={{ flex: 1 }}>
           <AppCard sx={{ borderRadius: '20px', p: 0, overflow: 'hidden' }}>
-            {job.imageUrl && <Box component="img" src={job.imageUrl} alt={job.title} sx={{ width: '100%', height: 220, objectFit: 'cover', borderBottom: '1px solid rgba(255,255,255,0.05)' }} />}
+            {job.imageUrl && <Box component="img" src={job.imageUrl} alt={job.title} sx={{ width: '100%', height: 'auto', maxHeight: { xs: 300, md: 500 }, objectFit: 'contain', bgcolor: '#0a0a0f', borderBottom: '1px solid rgba(255,255,255,0.05)' }} />}
 
             <Box sx={{ p: { xs: 3, md: 4 } }}>
               {/* Status + Type */}

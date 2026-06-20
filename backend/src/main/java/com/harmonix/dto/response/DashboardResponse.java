@@ -29,4 +29,7 @@ public class DashboardResponse {
     private List<OrderResponse> recentOrders;
     private List<OrderResponse> recentOrdersAsBuyer;
     private List<ReviewResponse> recentReviews;
+    
+    private List<ChartData> sellerChartData;
+    private List<ChartData> buyerChartData;
 }

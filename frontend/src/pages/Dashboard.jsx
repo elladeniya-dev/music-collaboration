@@ -4,8 +4,13 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import StarRateIcon from '@mui/icons-material/StarRate';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import PostAddIcon from '@mui/icons-material/PostAdd';
+import DesignServicesIcon from '@mui/icons-material/DesignServices';
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import ActivityCard from '../components/ActivityCard';
 import StatCard from '../components/StatCard';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { dashboardService } from '../services';
 import { PageHeader } from '../components/ui';
@@ -40,6 +45,7 @@ const formatTimeAgo = (dateString) => {
 
 const Dashboard = () => {
   const { user } = useUser();
+  const navigate = useNavigate();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -181,6 +187,10 @@ const Dashboard = () => {
     }));
   }, [data]);
 
+  const chartData = useMemo(() => {
+    return viewMode === 'seller' ? data?.sellerChartData || [] : data?.buyerChartData || [];
+  }, [data, viewMode]);
+
   const renderLoadingState = () => (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
@@ -290,7 +300,73 @@ const Dashboard = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <Box sx={{ gridColumn: { lg: 'span 2' }, bgcolor: '#16161f', borderRadius: '16px', p: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#ececf7', mb: 3 }}>
+                Performance Overview
+              </Typography>
+              <Box sx={{ width: '100%', height: 300 }}>
+                {chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={viewMode === 'seller' ? '#10b981' : '#ef4444'} stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor={viewMode === 'seller' ? '#10b981' : '#ef4444'} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="month" stroke="#5c5c72" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#5c5c72" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <RechartsTooltip 
+                        contentStyle={{ backgroundColor: '#1e1e2d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                        itemStyle={{ color: '#e0e0ef' }}
+                        formatter={(value) => [`$${value}`, viewMode === 'seller' ? 'Earnings' : 'Spent']}
+                      />
+                      <Area type="monotone" dataKey="earnings" stroke={viewMode === 'seller' ? '#10b981' : '#ef4444'} strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography variant="body2" sx={{ color: '#72728a' }}>No chart data available yet.</Typography>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+
+            <Box sx={{ bgcolor: '#16161f', borderRadius: '16px', p: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#ececf7', mb: 3 }}>
+                Quick Actions
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box onClick={() => navigate('/services/create')} sx={{ p: 2, borderRadius: '12px', bgcolor: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)', cursor: 'pointer', transition: 'all 0.2s', '&:hover': { bgcolor: 'rgba(99,102,241,0.12)', transform: 'translateY(-2px)' } }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                    <DesignServicesIcon sx={{ color: '#6366f1', fontSize: 20 }} />
+                    <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef' }}>Create Service</Typography>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: '#8b8b9e' }}>Offer your skills to the marketplace and start earning.</Typography>
+                </Box>
+                
+                <Box onClick={() => navigate('/post')} sx={{ p: 2, borderRadius: '12px', bgcolor: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)', cursor: 'pointer', transition: 'all 0.2s', '&:hover': { bgcolor: 'rgba(245,158,11,0.12)', transform: 'translateY(-2px)' } }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                    <PostAddIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
+                    <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef' }}>Post a Job</Typography>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: '#8b8b9e' }}>Hire top professionals for your next music project.</Typography>
+                </Box>
+
+                <Box onClick={() => navigate('/requests')} sx={{ p: 2, borderRadius: '12px', bgcolor: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.15)', cursor: 'pointer', transition: 'all 0.2s', '&:hover': { bgcolor: 'rgba(236,72,153,0.12)', transform: 'translateY(-2px)' } }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                    <HandshakeIcon sx={{ color: '#ec4899', fontSize: 20 }} />
+                    <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#e0e0ef' }}>Start Collaboration</Typography>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: '#8b8b9e' }}>Build a team and create a track together in real-time.</Typography>
+                </Box>
+              </Box>
+            </Box>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <ActivityCard
               title={viewMode === 'seller' ? 'Recent Selling Orders' : 'Recent Purchases'}
               items={recentOrders}

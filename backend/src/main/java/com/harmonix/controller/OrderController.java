@@ -11,8 +11,11 @@ import com.harmonix.mapper.OrderMapper;
 import com.harmonix.repository.UserRepository;
 import com.harmonix.service.OrderService;
 import com.harmonix.util.AuthUtil;
+import com.harmonix.util.AuthUtil;
+import com.harmonix.service.CloudinaryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +33,7 @@ public class OrderController {
     private final OrderService orderService;
     private final OrderMapper orderMapper;
     private final UserRepository userRepository;
+    private final CloudinaryService cloudinaryService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
@@ -67,19 +71,26 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(orderMapper.toResponse(order)));
     }
 
-    @PutMapping("/{id}/deliver")
+    @PutMapping(value = "/{id}/deliver", consumes = { "multipart/form-data" })
     public ResponseEntity<ApiResponse<OrderResponse>> deliverOrder(
             HttpServletRequest request,
             @PathVariable String id,
-            @Valid @RequestBody OrderDeliverRequest deliverRequest) {
+            @RequestParam("deliveryMessage") String deliveryMessage,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "fileUrl", required = false) String fileUrl) {
 
         User currentUser = AuthUtil.requireUser(request, userRepository);
+        
+        String finalFileUrl = fileUrl;
+        if (file != null && !file.isEmpty()) {
+            finalFileUrl = cloudinaryService.uploadMedia(file);
+        }
         
         Order order = orderService.deliverOrder(
                 currentUser.getId(), 
                 id, 
-                deliverRequest.getDeliveryMessage(), 
-                deliverRequest.getDeliveryFileUrl()
+                deliveryMessage, 
+                finalFileUrl
         );
         
         return ResponseEntity.ok(ApiResponse.success(orderMapper.toResponse(order)));
@@ -94,5 +105,16 @@ public class OrderController {
         
         Order order = orderService.completeOrder(currentUser.getId(), id);
         return ResponseEntity.ok(ApiResponse.success(orderMapper.toResponse(order)));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<String>> cancelOrder(
+            HttpServletRequest request,
+            @PathVariable String id) {
+
+        User currentUser = AuthUtil.requireUser(request, userRepository);
+        
+        orderService.cancelOrder(currentUser.getId(), id);
+        return ResponseEntity.ok(ApiResponse.success("Order cancelled and deleted successfully", null));
     }
 }

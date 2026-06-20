@@ -19,6 +19,14 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import com.harmonix.dto.response.ChartData;
 
 @Service
 @RequiredArgsConstructor
@@ -96,6 +104,10 @@ public class DashboardService {
                 .map(orderMapper::toResponse)
                 .collect(Collectors.toList());
 
+        // --- GENERATE CHART DATA ---
+        List<ChartData> sellerChartData = generateChartData(allSellerOrders);
+        List<ChartData> buyerChartData = generateChartData(allBuyerOrders);
+
         return DashboardResponse.builder()
                 .totalOrders(totalOrders)
                 .completedOrders(completedOrdersCount)
@@ -113,6 +125,36 @@ public class DashboardService {
                 .recentOrders(recentOrders)
                 .recentOrdersAsBuyer(recentOrdersAsBuyer)
                 .recentReviews(recentReviews)
+                
+                .sellerChartData(sellerChartData)
+                .buyerChartData(buyerChartData)
                 .build();
+    }
+    
+    private List<ChartData> generateChartData(List<Order> orders) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM yyyy");
+        Map<String, ChartData> monthlyData = new LinkedHashMap<>();
+        
+        // Initialize last 6 months
+        LocalDate now = LocalDate.now();
+        for (int i = 5; i >= 0; i--) {
+            String month = now.minusMonths(i).format(formatter);
+            monthlyData.put(month, new ChartData(month, 0.0, 0));
+        }
+        
+        for (Order order : orders) {
+            if (order.getStatus() == OrderStatus.COMPLETED && order.getCreatedAt() != null) {
+                LocalDate orderDate = order.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                String month = orderDate.format(formatter);
+                
+                if (monthlyData.containsKey(month)) {
+                    ChartData data = monthlyData.get(month);
+                    data.setOrders(data.getOrders() + 1);
+                    data.setEarnings(data.getEarnings() + order.getPrice());
+                }
+            }
+        }
+        
+        return new ArrayList<>(monthlyData.values());
     }
 }
