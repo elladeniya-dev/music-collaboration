@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Typography, Box, Chip, Avatar, Button, CircularProgress, Rating } from '@mui/material';
 import WorkIcon from '@mui/icons-material/Work';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PersonIcon from '@mui/icons-material/Person';
+import MessageIcon from '@mui/icons-material/Message';
 import { jobPostService, jobApplicationService } from '../services';
 import { formatDate, parseSkills, getUserId, isResourceOwner } from '../utils';
 import { showSuccess } from '../utils';
@@ -24,6 +25,7 @@ const STATUS_COLORS = {
 
 const JobDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useUser();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -147,14 +149,20 @@ const JobDetails = () => {
                         </Box>
                         <UserBadges badges={a.applicantBadges || ['Newcomer']} />
                         <Typography variant="body2" sx={{ color: '#8b8b9e', mt: 1.5, mb: 2, lineHeight: 1.6 }}>{a.coverLetter}</Typography>
-                        {a.status === 'ACCEPTED' ? (
-                          <Chip label="Accepted" size="small" icon={<CheckCircleIcon />} sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#10b981', fontWeight: 700, border: '1px solid rgba(16,185,129,0.2)' }} />
-                        ) : jobStatus === 'OPEN' && (
-                          <AppButton size="small" startIcon={<CheckCircleIcon sx={{ fontSize: 14 }} />} onClick={() => handleAcceptApplicant(a)}
-                            sx={{ borderRadius: '10px', px: 2.5, background: 'linear-gradient(135deg, #10b981, #059669)', '&:hover': { boxShadow: '0 0 20px rgba(16,185,129,0.2)' } }}>
-                            Accept
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {a.status === 'ACCEPTED' ? (
+                            <Chip label="Accepted" size="small" icon={<CheckCircleIcon />} sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#10b981', fontWeight: 700, border: '1px solid rgba(16,185,129,0.2)' }} />
+                          ) : jobStatus === 'OPEN' && (
+                            <AppButton size="small" startIcon={<CheckCircleIcon sx={{ fontSize: 14 }} />} onClick={() => handleAcceptApplicant(a)}
+                              sx={{ borderRadius: '10px', px: 2.5, background: 'linear-gradient(135deg, #10b981, #059669)', '&:hover': { boxShadow: '0 0 20px rgba(16,185,129,0.2)' } }}>
+                              Accept
+                            </AppButton>
+                          )}
+                          <AppButton size="small" startIcon={<MessageIcon sx={{ fontSize: 14 }} />} onClick={() => navigate(`/chat/${a.applicantId}`)}
+                            sx={{ borderRadius: '10px', px: 2.5, background: 'rgba(255,255,255,0.05)', color: '#e0e0ef', border: '1px solid rgba(255,255,255,0.1)', '&:hover': { background: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' } }}>
+                            Message
                           </AppButton>
-                        )}
+                        </Box>
                       </Box>
                     );
                   })}

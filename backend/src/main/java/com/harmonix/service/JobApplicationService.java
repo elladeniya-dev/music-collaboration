@@ -89,7 +89,7 @@ public class JobApplicationService {
                 .createdAt(app.getCreatedAt())
                 .applicantLevel(applicant != null && applicant.getLevel() != null ? applicant.getLevel() : 1)
                 .applicantBadges(applicant != null && applicant.getBadges() != null ? applicant.getBadges() : java.util.List.of("Newcomer"))
-                .applicantRating(applicant != null && applicant.getAverageRating() != null ? applicant.getAverageRating() : 0.0)
+                .applicantRating(applicant != null ? applicant.getAverageRating() : 0.0)
                 .build();
     }
 }
